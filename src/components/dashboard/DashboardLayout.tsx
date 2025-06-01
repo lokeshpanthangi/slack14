@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageProvider, useMessages } from '@/contexts/MessageContext';
@@ -22,12 +23,6 @@ const DashboardContent: React.FC = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showWorkspaceSettings, setShowWorkspaceSettings] = useState(false);
   const [favoriteChannel, setFavoriteChannel] = useState('general');
-  const [channels, setChannels] = useState([
-    { id: 'general', name: 'general', isPrivate: false },
-    { id: 'random', name: 'random', isPrivate: false },
-    { id: 'design', name: 'design', isPrivate: true },
-    { id: 'development', name: 'development', isPrivate: false },
-  ]);
 
   const handleCreateChannel = (channelData: { name: string; description: string; isPrivate: boolean }) => {
     const newChannel = {
@@ -35,7 +30,6 @@ const DashboardContent: React.FC = () => {
       name: channelData.name,
       isPrivate: channelData.isPrivate
     };
-    setChannels(prev => [...prev, newChannel]);
     setSelectedChannel(newChannel.id);
     setShowCreateChannel(false);
   };
@@ -100,7 +94,6 @@ const DashboardContent: React.FC = () => {
           onProfileClick={() => setShowUserProfile(true)}
           onCreateChannel={() => setShowCreateChannel(true)}
           onInviteTeammates={handleInviteTeammates}
-          channels={channels}
         />
       )}
       
@@ -158,3 +151,4 @@ const DashboardLayout: React.FC = () => {
 };
 
 export default DashboardLayout;
+
