@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -224,6 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
           </div>
+        </div>
 
         {/* User Profile */}
         <div className="p-4 border-t border-white/10">
