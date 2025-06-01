@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface User {
@@ -23,6 +22,7 @@ export interface Workspace {
   url: string;
   icon?: string;
   isAdmin: boolean;
+  slug?: string;
 }
 
 interface AuthContextType {
@@ -36,6 +36,7 @@ interface AuthContextType {
   updateUserStatus: (status: { text: string; emoji: string; expiration?: Date }) => void;
   updateUserPresence: (presence: 'active' | 'away' | 'offline' | 'dnd') => void;
   switchWorkspace: (workspaceId: string) => Promise<void>;
+  setWorkspace: (workspace: Workspace) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,7 +55,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [workspace, setWorkspaceState] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user && !!workspace;
@@ -69,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (savedUser && savedWorkspace) {
           setUser(JSON.parse(savedUser));
-          setWorkspace(JSON.parse(savedWorkspace));
+          setWorkspaceState(JSON.parse(savedWorkspace));
         }
       } catch (error) {
         console.error('Error checking session:', error);
@@ -106,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       setUser(mockUser);
-      setWorkspace(mockWorkspace);
+      setWorkspaceState(mockWorkspace);
       
       localStorage.setItem('slack_user', JSON.stringify(mockUser));
       localStorage.setItem('slack_workspace', JSON.stringify(mockWorkspace));
@@ -142,7 +143,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       setUser(mockUser);
-      setWorkspace(mockWorkspace);
+      setWorkspaceState(mockWorkspace);
       
       localStorage.setItem('slack_user', JSON.stringify(mockUser));
       localStorage.setItem('slack_workspace', JSON.stringify(mockWorkspace));
@@ -155,7 +156,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    setWorkspace(null);
+    setWorkspaceState(null);
     localStorage.removeItem('slack_user');
     localStorage.removeItem('slack_workspace');
   };
@@ -187,6 +188,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const setWorkspace = (newWorkspace: Workspace) => {
+    setWorkspaceState(newWorkspace);
+    localStorage.setItem('slack_workspace', JSON.stringify(newWorkspace));
+  };
+
   const value: AuthContextType = {
     user,
     workspace,
@@ -197,7 +203,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     updateUserStatus,
     updateUserPresence,
-    switchWorkspace
+    switchWorkspace,
+    setWorkspace
   };
 
   return (
