@@ -35,13 +35,22 @@ const WorkspacesPage: React.FC = () => {
   const [workspaceSlug, setWorkspaceSlug] = useState('');
 
   useEffect(() => {
-    fetchWorkspaces();
+    if (user) {
+      fetchWorkspaces();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   const fetchWorkspaces = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     try {
+      console.log('Fetching workspaces for user:', user.id);
+      
       // Fetch workspaces where user is a member
       const { data: workspaceMembers, error: membersError } = await supabase
         .from('workspace_members')
@@ -60,21 +69,17 @@ const WorkspacesPage: React.FC = () => {
 
       if (membersError) {
         console.error('Error fetching workspaces:', membersError);
-        toast({
-          title: "Error",
-          description: "Failed to load workspaces. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        setWorkspaces([]);
+      } else {
+        console.log('Workspace members data:', workspaceMembers);
+        const workspaceList = workspaceMembers
+          ?.map(member => member.workspaces)
+          .filter(Boolean) as Workspace[];
+        setWorkspaces(workspaceList || []);
       }
-
-      const workspaceList = workspaceMembers
-        ?.map(member => member.workspaces)
-        .filter(Boolean) as Workspace[];
-
-      setWorkspaces(workspaceList || []);
     } catch (error) {
       console.error('Error in fetchWorkspaces:', error);
+      setWorkspaces([]);
     } finally {
       setLoading(false);
     }
@@ -86,6 +91,8 @@ const WorkspacesPage: React.FC = () => {
 
     setCreateLoading(true);
     try {
+      console.log('Creating workspace:', workspaceName);
+      
       // Generate slug from workspace name
       const slug = workspaceName.toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
@@ -115,6 +122,8 @@ const WorkspacesPage: React.FC = () => {
         return;
       }
 
+      console.log('Workspace created:', workspace);
+
       // Set the new workspace as current
       await setWorkspace({
         id: workspace.id,
@@ -134,8 +143,6 @@ const WorkspacesPage: React.FC = () => {
       setWorkspaceName('');
       setWorkspaceDescription('');
       
-      // Refresh workspaces list
-      fetchWorkspaces();
     } catch (error) {
       console.error('Error in createWorkspace:', error);
       toast({
@@ -154,6 +161,8 @@ const WorkspacesPage: React.FC = () => {
 
     setJoinLoading(true);
     try {
+      console.log('Joining workspace:', workspaceSlug);
+      
       // Find workspace by slug
       const { data: workspace, error: workspaceError } = await supabase
         .from('workspaces')
@@ -162,6 +171,7 @@ const WorkspacesPage: React.FC = () => {
         .single();
 
       if (workspaceError || !workspace) {
+        console.error('Workspace not found:', workspaceError);
         toast({
           title: "Error",
           description: "Workspace not found. Please check the workspace URL.",
@@ -223,8 +233,6 @@ const WorkspacesPage: React.FC = () => {
       // Reset form
       setWorkspaceSlug('');
       
-      // Refresh workspaces list
-      fetchWorkspaces();
     } catch (error) {
       console.error('Error in joinWorkspace:', error);
       toast({
@@ -239,6 +247,8 @@ const WorkspacesPage: React.FC = () => {
 
   const selectWorkspace = async (workspace: Workspace) => {
     try {
+      console.log('Selecting workspace:', workspace.name);
+      
       // Check if user is admin of this workspace
       const { data: membership } = await supabase
         .from('workspace_members')
@@ -267,32 +277,43 @@ const WorkspacesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slack-light-gray flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-slack-aubergine rounded-slack-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-slack-text-secondary">Loading workspaces...</p>
+          <p className="text-gray-600">Loading workspaces...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please log in</h1>
+          <p className="text-gray-600">You need to be logged in to access workspaces.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slack-light-gray p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slack-text-primary mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome to Slack
           </h1>
-          <p className="text-slack-text-secondary">
+          <p className="text-gray-600">
             Choose a workspace to get started, or create a new one
           </p>
         </div>
 
         {workspaces.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-slack-text-primary mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Your Workspaces
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -304,7 +325,7 @@ const WorkspacesPage: React.FC = () => {
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-slack-aubergine rounded-slack-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                         {workspace.icon ? (
                           <img src={workspace.icon} alt="" className="w-6 h-6" />
                         ) : (
@@ -313,7 +334,7 @@ const WorkspacesPage: React.FC = () => {
                       </div>
                       <div>
                         <CardTitle className="text-lg">{workspace.name}</CardTitle>
-                        <p className="text-sm text-slack-text-secondary">
+                        <p className="text-sm text-gray-500">
                           {workspace.slug}.slack.com
                         </p>
                       </div>
@@ -321,7 +342,7 @@ const WorkspacesPage: React.FC = () => {
                   </CardHeader>
                   {workspace.description && (
                     <CardContent>
-                      <p className="text-sm text-slack-text-secondary">
+                      <p className="text-sm text-gray-600">
                         {workspace.description}
                       </p>
                     </CardContent>
@@ -395,7 +416,7 @@ const WorkspacesPage: React.FC = () => {
                         onChange={(e) => setWorkspaceSlug(e.target.value)}
                         required
                       />
-                      <span className="ml-2 text-slack-text-secondary">.slack.com</span>
+                      <span className="ml-2 text-gray-500">.slack.com</span>
                     </div>
                   </div>
                   <Button 
