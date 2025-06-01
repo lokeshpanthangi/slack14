@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { User, Workspace } from '@/contexts/AuthContext';
 import { useMessages } from '@/contexts/MessageContext';
+import DirectMessageModal from './DirectMessageModal';
 
 interface SidebarProps {
   user: User | null;
@@ -37,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [channelsExpanded, setChannelsExpanded] = useState(true);
   const [directMessagesExpanded, setDirectMessagesExpanded] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDirectMessageModal, setShowDirectMessageModal] = useState(false);
   const { messages } = useMessages();
 
   const channels = [
@@ -78,19 +80,23 @@ const Sidebar: React.FC<SidebarProps> = ({
     dm.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleDirectMessageSelect = (userId: string) => {
+    onChannelSelect(userId);
+  };
+
   return (
     <div className="w-64 bg-slack-dark-aubergine text-white flex flex-col">
       {/* Workspace Header */}
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <h1 className="font-bold text-18 truncate">{workspace?.name}</h1>
+            <h1 className="font-bold text-lg truncate">{workspace?.name}</h1>
           </div>
         </div>
         
-        <div className="flex items-center mt-1">
+        <div className="flex items-center mt-2">
           <div className="w-3 h-3 bg-green-500 rounded-full" />
-          <span className="ml-2 text-13 opacity-80">{user?.displayName}</span>
+          <span className="ml-2 text-sm opacity-80">{user?.displayName}</span>
         </div>
       </div>
 
@@ -103,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             placeholder="Search channels"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-md h-8 text-13"
+            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-md h-9 text-sm"
           />
         </div>
       </div>
@@ -115,9 +121,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           <Button
             variant="ghost"
             onClick={() => setChannelsExpanded(!channelsExpanded)}
-            className="flex items-center justify-between w-full text-white hover:bg-white/10 mb-2 h-7 px-0"
+            className="flex items-center justify-between w-full text-white hover:bg-white/10 mb-2 h-8 px-0"
           >
-            <div className="flex items-center text-13 font-semibold text-white/70">
+            <div className="flex items-center text-sm font-semibold text-white/70">
               {channelsExpanded ? (
                 <ChevronDown className="w-3 h-3 mr-1" />
               ) : (
@@ -132,9 +138,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 e.stopPropagation();
                 onCreateChannel();
               }}
-              className="hover:bg-white/20 h-6 w-6 p-0"
+              className="hover:bg-white/20 h-7 w-7 p-0"
             >
-              <Plus className="w-3 h-3" />
+              <Plus className="w-4 h-4" />
             </Button>
           </Button>
           
@@ -147,7 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     key={channel.id}
                     variant="ghost"
                     onClick={() => onChannelSelect(channel.id)}
-                    className={`w-full justify-start text-white hover:bg-white/10 h-7 text-13 font-normal px-2 ${
+                    className={`w-full justify-start text-white hover:bg-white/10 h-8 text-sm font-normal px-2 ${
                       currentChannel === channel.id ? 'bg-white/20' : ''
                     }`}
                   >
@@ -178,9 +184,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           <Button
             variant="ghost"
             onClick={() => setDirectMessagesExpanded(!directMessagesExpanded)}
-            className="flex items-center justify-between w-full text-white hover:bg-white/10 mb-2 h-7 px-0"
+            className="flex items-center justify-between w-full text-white hover:bg-white/10 mb-2 h-8 px-0"
           >
-            <div className="flex items-center text-13 font-semibold text-white/70">
+            <div className="flex items-center text-sm font-semibold text-white/70">
               {directMessagesExpanded ? (
                 <ChevronDown className="w-3 h-3 mr-1" />
               ) : (
@@ -193,11 +199,11 @@ const Sidebar: React.FC<SidebarProps> = ({
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                onInviteTeammates();
+                setShowDirectMessageModal(true);
               }}
-              className="hover:bg-white/20 h-6 w-6 p-0"
+              className="hover:bg-white/20 h-7 w-7 p-0"
             >
-              <UserPlus className="w-3 h-3" />
+              <Plus className="w-4 h-4" />
             </Button>
           </Button>
           
@@ -210,15 +216,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                     key={dm.id}
                     variant="ghost"
                     onClick={() => onChannelSelect(dm.id)}
-                    className={`w-full justify-start text-white hover:bg-white/10 h-7 text-13 font-normal px-2 ${
+                    className={`w-full justify-start text-white hover:bg-white/10 h-8 text-sm font-normal px-2 ${
                       currentChannel === dm.id ? 'bg-white/20' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center min-w-0">
                         <div className="relative mr-2 flex-shrink-0">
-                          <div className="w-2 h-2 rounded-full bg-white/20" />
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${getPresenceColor(dm.presence)}`} />
+                          <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${getPresenceColor(dm.presence)}`} />
                         </div>
                         <span className="truncate">{dm.name}</span>
                       </div>
@@ -241,22 +247,22 @@ const Sidebar: React.FC<SidebarProps> = ({
         <Button
           variant="ghost"
           onClick={onProfileClick}
-          className="w-full justify-start text-white hover:bg-white/10 h-10 px-2"
+          className="w-full justify-start text-white hover:bg-white/10 h-12 px-2"
         >
           <div className="flex items-center">
             <div className="relative mr-3">
-              <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-11">
+              <div className="w-9 h-9 bg-white/20 rounded-md flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
                   {user?.displayName?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full" />
             </div>
             <div className="flex-1 text-left">
-              <div className="text-white font-medium text-13 truncate">
+              <div className="text-white font-medium text-sm truncate">
                 {user?.displayName}
               </div>
-              <div className="text-white/60 text-11">
+              <div className="text-white/60 text-xs">
                 {user?.status.emoji} {user?.status.text || 'Active'}
               </div>
             </div>
@@ -264,6 +270,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </Button>
       </div>
+
+      {/* Direct Message Modal */}
+      <DirectMessageModal
+        isOpen={showDirectMessageModal}
+        onClose={() => setShowDirectMessageModal(false)}
+        onUserSelect={handleDirectMessageSelect}
+      />
     </div>
   );
 };

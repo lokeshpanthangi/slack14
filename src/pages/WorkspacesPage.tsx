@@ -4,7 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Plus, Users, Search, LogOut } from 'lucide-react';
+import { Plus, Users, Search, LogOut, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useNavigate } from 'react-router-dom';
 
 interface MockWorkspace {
   id: string;
@@ -12,49 +14,90 @@ interface MockWorkspace {
   memberCount: number;
   avatar: string;
   isOwner: boolean;
+  slug: string;
+  url: string;
 }
 
 const WorkspacesPage: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [joinWorkspaceUrl, setJoinWorkspaceUrl] = useState('');
   const [showJoinForm, setShowJoinForm] = useState(false);
+  const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
+  const [createWorkspaceData, setCreateWorkspaceData] = useState({
+    name: '',
+    description: '',
+    slug: ''
+  });
 
   // Mock workspaces data - in real app this would come from API
-  const userWorkspaces: MockWorkspace[] = [
+  const [userWorkspaces, setUserWorkspaces] = useState<MockWorkspace[]>([
     {
       id: '1',
       name: 'MisogiAI',
       memberCount: 83,
       avatar: '🤖',
-      isOwner: true
+      isOwner: true,
+      slug: 'misogiai',
+      url: 'misogiai.slack.com'
     },
     {
       id: '2', 
       name: 'Design Team',
       memberCount: 12,
       avatar: '🎨',
-      isOwner: false
+      isOwner: false,
+      slug: 'design-team',
+      url: 'design-team.slack.com'
     }
-  ];
+  ]);
 
   const handleLaunchWorkspace = (workspaceId: string) => {
     console.log('Launching workspace:', workspaceId);
-    // This would typically navigate to the workspace dashboard
-    // For now, we'll use the existing dashboard
-    window.location.reload();
+    // Navigate to dashboard for this workspace
+    navigate('/');
   };
 
   const handleCreateWorkspace = () => {
-    console.log('Creating new workspace');
-    // This would open a create workspace modal or navigate to creation flow
+    if (createWorkspaceData.name.trim()) {
+      const newWorkspace: MockWorkspace = {
+        id: Date.now().toString(),
+        name: createWorkspaceData.name,
+        memberCount: 1,
+        avatar: createWorkspaceData.name.charAt(0).toUpperCase(),
+        isOwner: true,
+        slug: createWorkspaceData.slug || createWorkspaceData.name.toLowerCase().replace(/\s+/g, '-'),
+        url: `${createWorkspaceData.slug || createWorkspaceData.name.toLowerCase().replace(/\s+/g, '-')}.slack.com`
+      };
+      
+      setUserWorkspaces(prev => [...prev, newWorkspace]);
+      setShowCreateWorkspace(false);
+      setCreateWorkspaceData({ name: '', description: '', slug: '' });
+      
+      // Redirect to the new workspace
+      handleLaunchWorkspace(newWorkspace.id);
+    }
   };
 
   const handleJoinWorkspace = () => {
     if (joinWorkspaceUrl.trim()) {
-      console.log('Joining workspace:', joinWorkspaceUrl);
-      // This would handle joining the workspace
+      // Mock joining workspace
+      const newWorkspace: MockWorkspace = {
+        id: Date.now().toString(),
+        name: 'Joined Workspace',
+        memberCount: 45,
+        avatar: 'J',
+        isOwner: false,
+        slug: 'joined-workspace',
+        url: joinWorkspaceUrl
+      };
+      
+      setUserWorkspaces(prev => [...prev, newWorkspace]);
       setJoinWorkspaceUrl('');
       setShowJoinForm(false);
+      
+      // Redirect to the joined workspace
+      handleLaunchWorkspace(newWorkspace.id);
     }
   };
 
@@ -137,6 +180,9 @@ const WorkspacesPage: React.FC = () => {
                           </span>
                         )}
                       </div>
+                      <div className="text-xs text-slack-text-secondary mt-1">
+                        {workspace.url}
+                      </div>
                     </div>
                   </div>
                   <Button
@@ -167,7 +213,7 @@ const WorkspacesPage: React.FC = () => {
                   </div>
                 </div>
                 <Button
-                  onClick={handleCreateWorkspace}
+                  onClick={() => setShowCreateWorkspace(true)}
                   variant="outline"
                   className="border-slack-aubergine text-slack-aubergine hover:bg-slack-aubergine hover:text-white"
                 >
@@ -234,6 +280,62 @@ const WorkspacesPage: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Create Workspace Modal */}
+      <Dialog open={showCreateWorkspace} onOpenChange={setShowCreateWorkspace}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create a new workspace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Workspace name</label>
+              <Input
+                placeholder="e.g. My Company"
+                value={createWorkspaceData.name}
+                onChange={(e) => setCreateWorkspaceData(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Description (optional)</label>
+              <Input
+                placeholder="What's this workspace for?"
+                value={createWorkspaceData.description}
+                onChange={(e) => setCreateWorkspaceData(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Workspace URL</label>
+              <div className="flex items-center">
+                <Input
+                  placeholder="my-company"
+                  value={createWorkspaceData.slug}
+                  onChange={(e) => setCreateWorkspaceData(prev => ({ ...prev, slug: e.target.value }))}
+                  className="rounded-r-none"
+                />
+                <span className="bg-gray-100 border border-l-0 px-3 py-2 text-sm text-gray-600 rounded-r-md">
+                  .slack.com
+                </span>
+              </div>
+            </div>
+            <div className="flex space-x-2 pt-4">
+              <Button
+                onClick={handleCreateWorkspace}
+                disabled={!createWorkspaceData.name.trim()}
+                className="flex-1"
+              >
+                Create Workspace
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateWorkspace(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
