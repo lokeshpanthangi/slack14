@@ -1,4 +1,11 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type Workspace = Database['public']['Tables']['workspaces']['Row'];
 
 export interface User {
   id: string;
@@ -57,140 +64,241 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [workspace, setWorkspaceState] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
 
-  const isAuthenticated = !!user && !!workspace;
+  const isAuthenticated = !!session && !!user;
 
   useEffect(() => {
-    // Simulate checking for existing session
-    const checkSession = async () => {
-      setIsLoading(true);
-      try {
-        const savedUser = localStorage.getItem('slack_user');
-        const savedWorkspace = localStorage.getItem('slack_workspace');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
         
-        if (savedUser && savedWorkspace) {
-          setUser(JSON.parse(savedUser));
-          setWorkspaceState(JSON.parse(savedWorkspace));
+        if (session?.user) {
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile) {
+            const userData: User = {
+              id: profile.id,
+              email: session.user.email || '',
+              displayName: profile.display_name,
+              avatar: profile.avatar_url || undefined,
+              status: {
+                text: profile.status_text || '',
+                emoji: profile.status_emoji || '',
+                expiration: profile.status_expiration ? new Date(profile.status_expiration) : undefined
+              },
+              presence: profile.presence || 'offline',
+              timezone: profile.timezone || 'UTC',
+              role: 'Member',
+              workspaceId: ''
+            };
+            setUser(userData);
+
+            // Check for current workspace session
+            const { data: userSession } = await supabase
+              .from('user_sessions')
+              .select(`
+                current_workspace_id,
+                workspaces:current_workspace_id (
+                  id,
+                  name,
+                  slug,
+                  icon
+                )
+              `)
+              .eq('user_id', session.user.id)
+              .single();
+
+            if (userSession?.workspaces) {
+              const ws = userSession.workspaces as any;
+              // Check if user is admin of this workspace
+              const { data: membership } = await supabase
+                .from('workspace_members')
+                .select('role')
+                .eq('workspace_id', ws.id)
+                .eq('user_id', session.user.id)
+                .single();
+
+              const workspaceData: Workspace = {
+                id: ws.id,
+                name: ws.name,
+                url: `${ws.slug}.slack.com`,
+                icon: ws.icon || undefined,
+                isAdmin: membership?.role === 'admin',
+                slug: ws.slug
+              };
+              setWorkspaceState(workspaceData);
+            }
+          }
+        } else {
+          setUser(null);
+          setWorkspaceState(null);
         }
-      } catch (error) {
-        console.error('Error checking session:', error);
-      } finally {
         setIsLoading(false);
       }
-    };
+    );
 
-    checkSession();
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string, workspaceUrl?: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser: User = {
-        id: '1',
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        displayName: email.split('@')[0],
-        status: { text: '', emoji: '' },
-        presence: 'active',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        role: 'Member',
-        workspaceId: '1'
-      };
+        password
+      });
 
-      const mockWorkspace: Workspace = {
-        id: '1',
-        name: workspaceUrl || 'My Workspace',
-        url: workspaceUrl || 'my-workspace',
-        isAdmin: false
-      };
-
-      setUser(mockUser);
-      setWorkspaceState(mockWorkspace);
-      
-      localStorage.setItem('slack_user', JSON.stringify(mockUser));
-      localStorage.setItem('slack_workspace', JSON.stringify(mockWorkspace));
-    } catch (error) {
-      throw new Error('Login failed');
-    } finally {
+      if (error) throw error;
+    } catch (error: any) {
       setIsLoading(false);
+      throw new Error(error.message || 'Login failed');
     }
   };
 
   const signup = async (email: string, password: string, displayName: string, workspaceName?: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const redirectUrl = `${window.location.origin}/`;
       
-      const mockUser: User = {
-        id: '1',
+      const { error } = await supabase.auth.signUp({
         email,
-        displayName,
-        status: { text: '', emoji: '' },
-        presence: 'active',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        role: workspaceName ? 'Admin' : 'Member',
-        workspaceId: '1'
-      };
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            display_name: displayName
+          }
+        }
+      });
 
-      const mockWorkspace: Workspace = {
-        id: '1',
-        name: workspaceName || 'My Workspace',
-        url: workspaceName?.toLowerCase().replace(/\s+/g, '-') || 'my-workspace',
-        isAdmin: !!workspaceName
-      };
+      if (error) throw error;
 
-      setUser(mockUser);
-      setWorkspaceState(mockWorkspace);
-      
-      localStorage.setItem('slack_user', JSON.stringify(mockUser));
-      localStorage.setItem('slack_workspace', JSON.stringify(mockWorkspace));
-    } catch (error) {
-      throw new Error('Signup failed');
-    } finally {
+      // If creating a workspace, we'll handle that after email confirmation
+      if (workspaceName) {
+        localStorage.setItem('pending_workspace', workspaceName);
+      }
+    } catch (error: any) {
       setIsLoading(false);
+      throw new Error(error.message || 'Signup failed');
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+    }
     setUser(null);
     setWorkspaceState(null);
-    localStorage.removeItem('slack_user');
-    localStorage.removeItem('slack_workspace');
+    setSession(null);
   };
 
-  const updateUserStatus = (status: { text: string; emoji: string; expiration?: Date }) => {
-    if (user) {
-      const updatedUser = { ...user, status };
-      setUser(updatedUser);
-      localStorage.setItem('slack_user', JSON.stringify(updatedUser));
+  const updateUserStatus = async (status: { text: string; emoji: string; expiration?: Date }) => {
+    if (user && session) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            status_text: status.text,
+            status_emoji: status.emoji,
+            status_expiration: status.expiration?.toISOString()
+          })
+          .eq('id', user.id);
+
+        if (!error) {
+          setUser({ ...user, status });
+        }
+      } catch (error) {
+        console.error('Error updating status:', error);
+      }
     }
   };
 
-  const updateUserPresence = (presence: 'active' | 'away' | 'offline' | 'dnd') => {
-    if (user) {
-      const updatedUser = { ...user, presence };
-      setUser(updatedUser);
-      localStorage.setItem('slack_user', JSON.stringify(updatedUser));
+  const updateUserPresence = async (presence: 'active' | 'away' | 'offline' | 'dnd') => {
+    if (user && session) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ presence })
+          .eq('id', user.id);
+
+        if (!error) {
+          setUser({ ...user, presence });
+        }
+      } catch (error) {
+        console.error('Error updating presence:', error);
+      }
     }
   };
 
   const switchWorkspace = async (workspaceId: string) => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      // Simulate API call to switch workspace
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // Implementation would update workspace context
+      // Update user session
+      await supabase
+        .from('user_sessions')
+        .upsert({
+          user_id: user.id,
+          current_workspace_id: workspaceId
+        });
+
+      // Fetch workspace details
+      const { data: workspaceData } = await supabase
+        .from('workspaces')
+        .select('*')
+        .eq('id', workspaceId)
+        .single();
+
+      if (workspaceData) {
+        // Check if user is admin
+        const { data: membership } = await supabase
+          .from('workspace_members')
+          .select('role')
+          .eq('workspace_id', workspaceId)
+          .eq('user_id', user.id)
+          .single();
+
+        const workspace: Workspace = {
+          id: workspaceData.id,
+          name: workspaceData.name,
+          url: `${workspaceData.slug}.slack.com`,
+          icon: workspaceData.icon || undefined,
+          isAdmin: membership?.role === 'admin',
+          slug: workspaceData.slug
+        };
+        setWorkspaceState(workspace);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const setWorkspace = (newWorkspace: Workspace) => {
+  const setWorkspace = async (newWorkspace: Workspace) => {
+    if (user) {
+      // Update user session in database
+      await supabase
+        .from('user_sessions')
+        .upsert({
+          user_id: user.id,
+          current_workspace_id: newWorkspace.id
+        });
+    }
     setWorkspaceState(newWorkspace);
-    localStorage.setItem('slack_workspace', JSON.stringify(newWorkspace));
   };
 
   const value: AuthContextType = {
