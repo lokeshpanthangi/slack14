@@ -24,6 +24,7 @@ interface SidebarProps {
   selectedChannel: string;
   onChannelSelect: (channel: string) => void;
   onUserProfileClick: () => void;
+  onCreateChannel?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -31,7 +32,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   workspace,
   selectedChannel,
   onChannelSelect,
-  onUserProfileClick
+  onUserProfileClick,
+  onCreateChannel
 }) => {
   const [showChannels, setShowChannels] = useState(true);
   const [showDirectMessages, setShowDirectMessages] = useState(true);
@@ -171,6 +173,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 ))}
                 <Button
                   variant="ghost"
+                  onClick={onCreateChannel}
                   className="w-full justify-start text-white/70 hover:bg-white/10 hover:text-white h-6 text-13 font-normal pl-6"
                 >
                   <Plus className="mr-2 w-3 h-3" />

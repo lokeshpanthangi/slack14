@@ -1,7 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { 
   Hash, 
   Users, 
@@ -9,12 +8,12 @@ import {
   Phone, 
   Video, 
   Info, 
-  Search,
-  Smile,
-  Paperclip,
-  Send
+  Search
 } from 'lucide-react';
 import { User } from '@/contexts/AuthContext';
+import { useMessages } from '@/contexts/MessageContext';
+import MessageBubble from './MessageBubble';
+import MessageInput from './MessageInput';
 
 interface ChatAreaProps {
   channel: string;
@@ -22,7 +21,17 @@ interface ChatAreaProps {
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
-  const [message, setMessage] = useState('');
+  const { messages } = useMessages();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const channelMessages = messages[channel] || [];
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [channelMessages]);
 
   const getChannelIcon = () => {
     if (channel.startsWith('dm-')) {
@@ -43,18 +52,24 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
     return channel;
   };
 
-  const sendMessage = () => {
-    if (message.trim()) {
-      console.log('Sending message:', message, 'to channel:', channel);
-      setMessage('');
-    }
+  const shouldShowAvatar = (messageIndex: number) => {
+    if (messageIndex === 0) return true;
+    const currentMessage = channelMessages[messageIndex];
+    const previousMessage = channelMessages[messageIndex - 1];
+    
+    // Show avatar if different user or time gap > 5 minutes
+    const timeDiff = currentMessage.timestamp.getTime() - previousMessage.timestamp.getTime();
+    return currentMessage.userId !== previousMessage.userId || timeDiff > 5 * 60 * 1000;
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  const isGroupedMessage = (messageIndex: number) => {
+    if (messageIndex === 0) return false;
+    const currentMessage = channelMessages[messageIndex];
+    const previousMessage = channelMessages[messageIndex - 1];
+    
+    // Group if same user and within 5 minutes
+    const timeDiff = currentMessage.timestamp.getTime() - previousMessage.timestamp.getTime();
+    return currentMessage.userId === previousMessage.userId && timeDiff <= 5 * 60 * 1000;
   };
 
   return (
@@ -69,7 +84,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
             </h2>
             {!channel.startsWith('dm-') && (
               <p className="text-sm text-slack-text-secondary">
-                Channel description goes here
+                {channelMessages.length} {channelMessages.length === 1 ? 'member' : 'members'}
               </p>
             )}
           </div>
@@ -95,74 +110,43 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-4">
-          {/* Welcome message */}
+      <div className="flex-1 overflow-y-auto">
+        {channelMessages.length === 0 ? (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-slack-light-gray rounded-slack-lg flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-slack-light-gray rounded-lg flex items-center justify-center mx-auto mb-4">
               {getChannelIcon()}
             </div>
             <h3 className="text-xl font-bold text-slack-text-primary mb-2">
               This is the very beginning of #{getChannelName()}
             </h3>
             <p className="text-slack-text-secondary">
-              This channel is for workspace-wide communication and announcements.
+              {channel.startsWith('dm-') 
+                ? 'This is the start of your conversation.'
+                : 'This channel is for workspace-wide communication and announcements.'
+              }
             </p>
           </div>
-
-          {/* Sample messages */}
-          <div className="space-y-6">
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-slack-aubergine rounded-slack-md flex items-center justify-center">
-                <span className="text-white font-bold text-sm">U</span>
-              </div>
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-bold text-slack-text-primary">User</span>
-                  <span className="text-xs text-slack-text-secondary">9:00 AM</span>
-                </div>
-                <p className="text-slack-text-primary">
-                  Welcome to the team! 👋
-                </p>
-              </div>
-            </div>
+        ) : (
+          <div className="pb-4">
+            {channelMessages.map((message, index) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                showAvatar={shouldShowAvatar(index)}
+                isGrouped={isGroupedMessage(index)}
+              />
+            ))}
+            <div ref={messagesEndRef} />
           </div>
-        </div>
+        )}
       </div>
 
       {/* Message Input */}
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-end space-x-3">
-          <div className="flex-1 border border-gray-300 rounded-slack-lg overflow-hidden">
-            <div className="p-3">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={`Message #${getChannelName()}`}
-                className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
-            <div className="flex items-center justify-between px-3 pb-3">
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm">
-                  <Paperclip className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Smile className="w-4 h-4" />
-                </Button>
-              </div>
-              <Button
-                onClick={sendMessage}
-                disabled={!message.trim()}
-                size="sm"
-                className="bg-slack-green hover:bg-slack-green/90"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <MessageInput
+          channelId={channel}
+          placeholder={`Message ${channel.startsWith('dm-') ? getChannelName() : `#${getChannelName()}`}`}
+        />
       </div>
     </div>
   );
