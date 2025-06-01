@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageProvider, useMessages } from '@/contexts/MessageContext';
@@ -12,6 +11,7 @@ import UserProfile from './UserProfile';
 import CreateChannelModal from './CreateChannelModal';
 import SearchModal from './SearchModal';
 import WorkspaceSettings from './WorkspaceSettings';
+import InviteTeammatesModal from './InviteTeammatesModal';
 
 const DashboardContent: React.FC = () => {
   const { user, workspace } = useAuth();
@@ -22,6 +22,7 @@ const DashboardContent: React.FC = () => {
   const [showDMSidebar, setShowDMSidebar] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showWorkspaceSettings, setShowWorkspaceSettings] = useState(false);
+  const [showInviteTeammates, setShowInviteTeammates] = useState(false);
   const [favoriteChannel, setFavoriteChannel] = useState('general');
 
   const handleCreateChannel = (channelData: { name: string; description: string; isPrivate: boolean }) => {
@@ -64,8 +65,7 @@ const DashboardContent: React.FC = () => {
   };
 
   const handleInviteTeammates = () => {
-    console.log('Invite teammates clicked');
-    // TODO: Implement invite teammates functionality
+    setShowInviteTeammates(true);
   };
 
   return (
@@ -138,6 +138,11 @@ const DashboardContent: React.FC = () => {
         isOpen={showWorkspaceSettings}
         onClose={() => setShowWorkspaceSettings(false)}
       />
+
+      <InviteTeammatesModal
+        isOpen={showInviteTeammates}
+        onClose={() => setShowInviteTeammates(false)}
+      />
     </div>
   );
 };
@@ -151,4 +156,3 @@ const DashboardLayout: React.FC = () => {
 };
 
 export default DashboardLayout;
-

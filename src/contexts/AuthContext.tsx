@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
-type Workspace = Database['public']['Tables']['workspaces']['Row'];
+type WorkspaceRow = Database['public']['Tables']['workspaces']['Row'];
 
 export interface User {
   id: string;
@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .single();
 
             if (userSession?.workspaces) {
-              const ws = userSession.workspaces as any;
+              const ws = userSession.workspaces as WorkspaceRow;
               // Check if user is admin of this workspace
               const { data: membership } = await supabase
                 .from('workspace_members')

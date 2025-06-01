@@ -43,7 +43,7 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = ({
     member.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const workspaceUrl = `${workspace?.url || 'my-workspace'}.slack.com`;
+  const workspaceUrl = workspace?.url || 'my-workspace.slack.com';
   const workspaceId = workspace?.id || 'workspace-123';
 
   const handleCopy = (text: string, field: string) => {

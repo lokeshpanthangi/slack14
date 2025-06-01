@@ -25,8 +25,9 @@ const InviteTeammatesModal: React.FC<InviteTeammatesModalProps> = ({
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Generate invite URL and code based on workspace
-  const inviteUrl = `https://${workspace?.url}.slack.com/signup`;
-  const inviteCode = `${workspace?.url?.toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  const workspaceSlug = workspace?.slug || 'my-workspace';
+  const inviteUrl = `https://${workspaceSlug}.slack.com/signup`;
+  const inviteCode = `${workspaceSlug.toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
   const copyToClipboard = async (text: string, type: 'url' | 'code') => {
     try {
