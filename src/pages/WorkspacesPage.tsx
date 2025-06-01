@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Plus, Users, Search, LogOut, X } from 'lucide-react';
+import { Plus, Users, LogOut, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 
@@ -63,8 +63,8 @@ const WorkspacesPage: React.FC = () => {
         slug: selectedWorkspace.slug,
         isAdmin: selectedWorkspace.isOwner
       });
-      // Navigate to dashboard
-      navigate('/');
+      // Navigate to dashboard - use replace to avoid going back to workspaces
+      navigate('/', { replace: true });
     }
   };
 
@@ -113,45 +113,26 @@ const WorkspacesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slack-aubergine via-purple-700 to-slack-dark-aubergine">
-      {/* Header */}
+      {/* Simplified Header - Only Logo/Name */}
       <header className="bg-black/20 backdrop-blur-sm border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-slack-aubergine font-bold text-lg">S</span>
-                </div>
-                <span className="text-white font-bold text-xl">slack</span>
-                <span className="text-white/60 text-sm">from Salesforce</span>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                <span className="text-slack-aubergine font-bold text-lg">S</span>
               </div>
-              
-              <nav className="hidden md:flex space-x-6">
-                <a href="#" className="text-white/80 hover:text-white text-sm">Features</a>
-                <a href="#" className="text-white/80 hover:text-white text-sm">Solutions</a>
-                <a href="#" className="text-white/80 hover:text-white text-sm">Enterprise</a>
-                <a href="#" className="text-white/80 hover:text-white text-sm">Resources</a>
-                <a href="#" className="text-white/80 hover:text-white text-sm">Pricing</a>
-              </nav>
+              <span className="text-white font-bold text-xl">slack</span>
+              <span className="text-white/60 text-sm">from Salesforce</span>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10">
-                <Search className="w-4 h-4 mr-2" />
-                Search
-              </Button>
-              <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
-                Talk to Sales
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={logout}
-                className="text-white/80 hover:text-white hover:bg-white/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              onClick={logout}
+              className="text-white/80 hover:text-white hover:bg-white/10"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </header>
