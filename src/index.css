@@ -45,18 +45,22 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Slack-specific colors */
-    --slack-aubergine: #611f69;
-    --slack-dark: #1d1c1d;
+    /* Updated Slack-specific colors to match the image */
+    --slack-aubergine: #4a154b;
+    --slack-dark: #1a1d29;
     --slack-light-gray: #f8f8f8;
     --slack-white: #ffffff;
     --slack-green: #2eb67d;
     --slack-amber: #ecb22e;
     --slack-red: #e01e5a;
     --slack-border: #e0e0e0;
-    --slack-text-primary: #1d1c1d;
-    --slack-text-secondary: #616061;
+    --slack-text-primary: #d1d2d3;
+    --slack-text-secondary: #ababad;
     --slack-text-muted: #868686;
+    --slack-chat-bg: #1a1d29;
+    --slack-message-hover: #222529;
+    --slack-input-bg: #2c2d30;
+    --slack-input-border: #565856;
   }
 
   .dark {
@@ -138,8 +142,24 @@
     background-color: var(--slack-white);
   }
 
+  .bg-slack-chat {
+    background-color: var(--slack-chat-bg);
+  }
+
+  .bg-slack-message-hover {
+    background-color: var(--slack-message-hover);
+  }
+
+  .bg-slack-input {
+    background-color: var(--slack-input-bg);
+  }
+
   .border-slack {
     border-color: var(--slack-border);
+  }
+
+  .border-slack-input {
+    border-color: var(--slack-input-border);
   }
 
   .text-11 {

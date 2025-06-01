@@ -3,13 +3,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-  Send, 
-  Smile, 
-  Paperclip, 
   Bold, 
   Italic, 
-  Link,
-  Hash
+  Code, 
+  Link, 
+  Smile, 
+  Paperclip, 
+  AtSign,
+  Hash,
+  Send
 } from 'lucide-react';
 import { useMessages } from '@/contexts/MessageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,159 +19,112 @@ import { useAuth } from '@/contexts/AuthContext';
 interface MessageInputProps {
   channelId: string;
   placeholder?: string;
-  onSend?: () => void;
   isThread?: boolean;
   parentMessageId?: string;
 }
 
-interface Mention {
-  id: string;
-  type: 'user' | 'channel';
-  name: string;
-  displayName: string;
-}
-
 const MessageInput: React.FC<MessageInputProps> = ({ 
   channelId, 
-  placeholder = "Type a message...", 
-  onSend,
+  placeholder = "Type a message...",
   isThread = false,
   parentMessageId 
 }) => {
   const [message, setMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
-  const [mentionQuery, setMentionQuery] = useState('');
-  const [mentionPosition, setMentionPosition] = useState({ start: 0, end: 0 });
-  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [mentionSearch, setMentionSearch] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
   const { addMessage, addReply } = useMessages();
   const { user } = useAuth();
 
-  // Mock workspace members and channels for @mentions
-  const workspaceMembers: Mention[] = [
-    { id: 'user1', type: 'user', name: 'sarah.wilson', displayName: 'Sarah Wilson' },
-    { id: 'user2', type: 'user', name: 'mike.chen', displayName: 'Mike Chen' },
-    { id: 'user3', type: 'user', name: 'emma.davis', displayName: 'Emma Davis' },
+  const commonEmojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰'];
+  
+  const workspaceMembers = [
+    { id: '1', name: 'Sarah Wilson', username: 'sarah' },
+    { id: '2', name: 'Mike Chen', username: 'mike' },
+    { id: '3', name: 'Emma Davis', username: 'emma' },
+    { id: '4', name: 'John Doe', username: 'john' },
   ];
 
-  const workspaceChannels: Mention[] = [
-    { id: 'general', type: 'channel', name: 'general', displayName: 'general' },
-    { id: 'random', type: 'channel', name: 'random', displayName: 'random' },
-    { id: 'design', type: 'channel', name: 'design', displayName: 'design' },
+  const channels = [
+    { id: 'general', name: 'general' },
+    { id: 'random', name: 'random' },
+    { id: 'design', name: 'design' },
+    { id: 'development', name: 'development' },
   ];
 
-  const allMentions = [...workspaceMembers, ...workspaceChannels];
-
-  const filteredMentions = allMentions.filter(mention =>
-    mention.name.toLowerCase().includes(mentionQuery.toLowerCase()) ||
-    mention.displayName.toLowerCase().includes(mentionQuery.toLowerCase())
-  );
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setMessage(value);
-
-    // Check for @mentions
-    const cursorPosition = e.target.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPosition);
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
-
-    if (mentionMatch) {
-      setShowMentions(true);
-      setMentionQuery(mentionMatch[1]);
-      setMentionPosition({
-        start: cursorPosition - mentionMatch[0].length,
-        end: cursorPosition
-      });
-      setSelectedMentionIndex(0);
-    } else {
-      setShowMentions(false);
-    }
-
-    // Auto-resize textarea
+  useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = '22px';
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
     }
+  }, [message]);
+
+  const handleSend = () => {
+    if (!message.trim() || !user) return;
+
+    const messageData = {
+      channelId,
+      userId: user.id,
+      username: user.displayName,
+      content: message.trim(),
+    };
+
+    if (isThread && parentMessageId) {
+      addReply(channelId, parentMessageId, messageData);
+    } else {
+      addMessage(channelId, messageData);
+    }
+
+    setMessage('');
   };
 
-  const insertMention = (mention: Mention) => {
-    const beforeMention = message.slice(0, mentionPosition.start);
-    const afterMention = message.slice(mentionPosition.end);
-    const mentionText = mention.type === 'user' ? `@${mention.name}` : `#${mention.name}`;
-    
-    const newMessage = beforeMention + mentionText + ' ' + afterMention;
-    setMessage(newMessage);
-    setShowMentions(false);
-    
-    // Focus back to textarea
-    setTimeout(() => {
-      if (textareaRef.current) {
-        const newCursorPosition = beforeMention.length + mentionText.length + 1;
-        textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-        textareaRef.current.focus();
-      }
-    }, 0);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (showMentions) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedMentionIndex(prev => 
-          prev < filteredMentions.length - 1 ? prev + 1 : 0
-        );
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedMentionIndex(prev => 
-          prev > 0 ? prev - 1 : filteredMentions.length - 1
-        );
-      } else if (e.key === 'Enter' && filteredMentions.length > 0) {
-        e.preventDefault();
-        insertMention(filteredMentions[selectedMentionIndex]);
-      } else if (e.key === 'Escape') {
-        setShowMentions(false);
-      }
-    } else if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  const handleSend = () => {
-    if (message.trim() && user) {
-      if (isThread && parentMessageId) {
-        addReply(channelId, parentMessageId, {
-          channelId,
-          userId: user.id,
-          username: user.displayName,
-          content: message.trim()
-        });
-      } else {
-        addMessage(channelId, {
-          channelId,
-          userId: user.id,
-          username: user.displayName,
-          content: message.trim()
-        });
-      }
-      
-      setMessage('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-      onSend?.();
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setMessage(value);
+
+    // Check for @ mentions
+    const lastAtIndex = value.lastIndexOf('@');
+    const lastSpaceIndex = value.lastIndexOf(' ');
+    
+    if (lastAtIndex > lastSpaceIndex && lastAtIndex !== -1) {
+      const searchTerm = value.slice(lastAtIndex + 1);
+      setMentionSearch(searchTerm);
+      setShowMentions(true);
+    } else {
+      setShowMentions(false);
     }
   };
 
-  const formatText = (type: 'bold' | 'italic' | 'code') => {
+  const insertMention = (username: string) => {
+    const lastAtIndex = message.lastIndexOf('@');
+    const beforeMention = message.slice(0, lastAtIndex);
+    const newMessage = beforeMention + `@${username} `;
+    setMessage(newMessage);
+    setShowMentions(false);
+    textareaRef.current?.focus();
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
+    textareaRef.current?.focus();
+  };
+
+  const formatText = (type: string) => {
     if (!textareaRef.current) return;
-    
+
     const start = textareaRef.current.selectionStart;
     const end = textareaRef.current.selectionEnd;
     const selectedText = message.slice(start, end);
-    
+
     let formattedText = '';
     switch (type) {
       case 'bold':
@@ -181,127 +136,148 @@ const MessageInput: React.FC<MessageInputProps> = ({
       case 'code':
         formattedText = `\`${selectedText}\``;
         break;
+      default:
+        return;
     }
-    
+
     const newMessage = message.slice(0, start) + formattedText + message.slice(end);
     setMessage(newMessage);
-    
-    // Update cursor position
-    setTimeout(() => {
-      if (textareaRef.current) {
-        const newStart = start + (type === 'code' ? 1 : 1);
-        const newEnd = newStart + selectedText.length;
-        textareaRef.current.setSelectionRange(newStart, newEnd);
-        textareaRef.current.focus();
-      }
-    }, 0);
+    textareaRef.current.focus();
   };
+
+  const filteredMembers = workspaceMembers.filter(member =>
+    member.username.toLowerCase().includes(mentionSearch.toLowerCase()) ||
+    member.name.toLowerCase().includes(mentionSearch.toLowerCase())
+  );
 
   return (
     <div className="relative">
-      {showMentions && filteredMentions.length > 0 && (
-        <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50">
-          {filteredMentions.map((mention, index) => (
+      {/* Mentions Dropdown */}
+      {showMentions && filteredMembers.length > 0 && (
+        <div className="absolute bottom-full left-0 mb-2 bg-slack-input border border-slack-input-border rounded-lg shadow-lg max-h-48 overflow-y-auto z-50 w-64">
+          {filteredMembers.map((member) => (
             <button
-              key={mention.id}
-              onClick={() => insertMention(mention)}
-              className={`w-full flex items-center px-4 py-2 text-left hover:bg-gray-50 ${
-                index === selectedMentionIndex ? 'bg-blue-50' : ''
-              }`}
+              key={member.id}
+              onClick={() => insertMention(member.username)}
+              className="w-full text-left px-3 py-2 hover:bg-slack-message-hover flex items-center space-x-2"
             >
-              <div className="flex items-center space-x-2">
-                {mention.type === 'user' ? (
-                  <>
-                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold">
-                        {mention.displayName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="font-medium">{mention.displayName}</div>
-                      <div className="text-sm text-gray-500">@{mention.name}</div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Hash className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium">#{mention.name}</span>
-                  </>
-                )}
+              <div className="w-6 h-6 bg-slack-aubergine rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">
+                  {member.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <div className="text-slack-primary font-medium">{member.name}</div>
+                <div className="text-slack-muted text-sm">@{member.username}</div>
               </div>
             </button>
           ))}
         </div>
       )}
-      
-      <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+
+      {/* Emoji Picker */}
+      {showEmojiPicker && (
+        <div className="absolute bottom-full right-0 mb-2 bg-slack-input border border-slack-input-border rounded-lg shadow-lg p-3 grid grid-cols-8 gap-1 z-50">
+          {commonEmojis.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => insertEmoji(emoji)}
+              className="w-8 h-8 flex items-center justify-center hover:bg-slack-message-hover rounded text-lg"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input Container */}
+      <div className="bg-slack-input border border-slack-input-border rounded-lg">
         {/* Formatting Toolbar */}
-        <div className="flex items-center px-3 py-2 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center space-x-1 p-2 border-b border-slack-input-border">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => formatText('bold')}
+            className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+          >
+            <Bold className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => formatText('italic')}
+            className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+          >
+            <Italic className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => formatText('code')}
+            className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+          >
+            <Code className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+          >
+            <Link className="w-3 h-3" />
+          </Button>
+          <div className="h-4 w-px bg-slack-input-border mx-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+          >
+            <AtSign className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+          >
+            <Hash className="w-3 h-3" />
+          </Button>
+        </div>
+
+        {/* Text Input */}
+        <div className="flex items-end p-3 space-x-2">
+          <Textarea
+            ref={textareaRef}
+            value={message}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            placeholder={placeholder}
+            className="flex-1 min-h-[22px] max-h-[200px] resize-none bg-transparent border-none text-slack-primary placeholder:text-slack-muted focus:ring-0 focus:outline-none"
+            rows={1}
+          />
           <div className="flex items-center space-x-1">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => formatText('bold')}
-              className="h-7 w-7 p-0"
+              className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
             >
-              <Bold className="w-3 h-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('italic')}
-              className="h-7 w-7 p-0"
-            >
-              <Italic className="w-3 h-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => formatText('code')}
-              className="h-7 w-7 p-0 font-mono text-xs"
-            >
-              {'</>'}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-            >
-              <Link className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Message Input */}
-        <div className="p-3">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleTextChange}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[22px] max-h-[200px]"
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between px-3 pb-3">
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
               <Paperclip className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+            >
               <Smile className="w-4 h-4" />
             </Button>
+            <Button
+              onClick={handleSend}
+              disabled={!message.trim()}
+              size="sm"
+              className="h-7 w-7 p-0 bg-slack-green hover:bg-slack-green/80 text-white disabled:opacity-50"
+            >
+              <Send className="w-3 h-3" />
+            </Button>
           </div>
-          <Button
-            onClick={handleSend}
-            disabled={!message.trim()}
-            size="sm"
-            className="bg-slack-green hover:bg-slack-green/90 text-white"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
         </div>
       </div>
     </div>
