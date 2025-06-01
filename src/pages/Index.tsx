@@ -1,17 +1,17 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import WorkspaceSelector from '@/components/auth/WorkspaceSelector';
 import LoginForm from '@/components/auth/LoginForm';
 import SignUpForm from '@/components/auth/SignUpForm';
+import WorkspacesPage from './WorkspacesPage';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
-type AuthStep = 'workspace' | 'login' | 'signup' | 'create-workspace';
+type AuthStep = 'login' | 'signup';
 
 const Index: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const [authStep, setAuthStep] = useState<AuthStep>('workspace');
-  const [selectedWorkspace, setSelectedWorkspace] = useState('');
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [authStep, setAuthStep] = useState<AuthStep>('login');
+  const [showWorkspaces, setShowWorkspaces] = useState(false);
 
   if (isLoading) {
     return (
@@ -26,23 +26,15 @@ const Index: React.FC = () => {
     );
   }
 
-  if (isAuthenticated) {
-    return <DashboardLayout />;
+  // After authentication, show workspaces page first
+  if (isAuthenticated && !showWorkspaces) {
+    return <WorkspacesPage />;
   }
 
-  const handleWorkspaceSelect = (workspaceUrl: string) => {
-    setSelectedWorkspace(workspaceUrl);
-    setAuthStep('login');
-  };
-
-  const handleCreateWorkspace = () => {
-    setAuthStep('create-workspace');
-  };
-
-  const handleBackToWorkspace = () => {
-    setAuthStep('workspace');
-    setSelectedWorkspace('');
-  };
+  // If user has selected a workspace, show dashboard
+  if (isAuthenticated && showWorkspaces) {
+    return <DashboardLayout />;
+  }
 
   const handleSwitchToSignUp = () => {
     setAuthStep('signup');
@@ -57,20 +49,13 @@ const Index: React.FC = () => {
     // Implement forgot password flow
   };
 
+  // Show authentication forms for non-authenticated users
   switch (authStep) {
-    case 'workspace':
-      return (
-        <WorkspaceSelector
-          onWorkspaceSelect={handleWorkspaceSelect}
-          onCreateWorkspace={handleCreateWorkspace}
-        />
-      );
-
     case 'login':
       return (
         <LoginForm
-          workspaceUrl={selectedWorkspace}
-          onBack={handleBackToWorkspace}
+          workspaceUrl=""
+          onBack={() => {}} // Not needed in new flow
           onForgotPassword={handleForgotPassword}
           onSignUp={handleSwitchToSignUp}
         />
@@ -79,26 +64,19 @@ const Index: React.FC = () => {
     case 'signup':
       return (
         <SignUpForm
-          onBack={handleBackToWorkspace}
+          onBack={handleSwitchToLogin}
           onSignIn={handleSwitchToLogin}
           isCreatingWorkspace={false}
         />
       );
 
-    case 'create-workspace':
-      return (
-        <SignUpForm
-          onBack={handleBackToWorkspace}
-          onSignIn={handleSwitchToLogin}
-          isCreatingWorkspace={true}
-        />
-      );
-
     default:
       return (
-        <WorkspaceSelector
-          onWorkspaceSelect={handleWorkspaceSelect}
-          onCreateWorkspace={handleCreateWorkspace}
+        <LoginForm
+          workspaceUrl=""
+          onBack={() => {}}
+          onForgotPassword={handleForgotPassword}
+          onSignUp={handleSwitchToSignUp}
         />
       );
   }

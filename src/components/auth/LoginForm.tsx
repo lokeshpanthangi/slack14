@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface LoginFormProps {
@@ -51,25 +50,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
     <div className="min-h-screen bg-slack-light-gray flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="mb-4 text-slack-text-secondary hover:text-slack-text-primary"
-          >
-            <ArrowLeft className="mr-2 w-4 h-4" />
-            Back to workspace selection
-          </Button>
-          
           <div className="mx-auto w-16 h-16 bg-slack-aubergine rounded-slack-xl flex items-center justify-center mb-6">
-            <span className="text-white text-xl font-bold">
-              {workspaceUrl.charAt(0).toUpperCase()}
-            </span>
+            <Users className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-slack-text-primary mb-2">
-            Sign in to {workspaceUrl}
+            Sign in to Slack
           </h1>
           <p className="text-13 text-slack-text-secondary">
-            Enter your email and password
+            Enter your email and password to continue
           </p>
         </div>
 
@@ -79,7 +67,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               Welcome back
             </CardTitle>
             <CardDescription className="text-13 text-slack-text-secondary">
-              Sign in to your account to continue
+              Sign in to access your workspaces
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -222,7 +210,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
         <div className="text-center">
           <p className="text-13 text-slack-text-secondary">
-            New to {workspaceUrl}?{' '}
+            New to Slack?{' '}
             <Button
               variant="link"
               onClick={onSignUp}
