@@ -364,7 +364,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_workspaces: {
+        Args: { user_uuid: string }
+        Returns: {
+          workspace_id: string
+        }[]
+      }
     }
     Enums: {
       channel_type: "public" | "private" | "direct"

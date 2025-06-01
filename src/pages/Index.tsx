@@ -9,9 +9,8 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 type AuthStep = 'login' | 'signup';
 
 const Index: React.FC = () => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, workspace } = useAuth();
   const [authStep, setAuthStep] = useState<AuthStep>('login');
-  const [showWorkspaces, setShowWorkspaces] = useState(false);
 
   if (isLoading) {
     return (
@@ -26,14 +25,14 @@ const Index: React.FC = () => {
     );
   }
 
-  // After authentication, show workspaces page first
-  if (isAuthenticated && !showWorkspaces) {
-    return <WorkspacesPage />;
+  // If user is authenticated and has selected a workspace, show dashboard
+  if (isAuthenticated && workspace) {
+    return <DashboardLayout />;
   }
 
-  // If user has selected a workspace, show dashboard
-  if (isAuthenticated && showWorkspaces) {
-    return <DashboardLayout />;
+  // If user is authenticated but no workspace selected, show workspaces page
+  if (isAuthenticated && !workspace) {
+    return <WorkspacesPage />;
   }
 
   const handleSwitchToSignUp = () => {
