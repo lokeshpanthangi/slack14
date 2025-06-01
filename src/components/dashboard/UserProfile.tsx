@@ -1,42 +1,55 @@
 
 import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { User, X, Camera, Clock, MapPin, Mail, Smartphone } from 'lucide-react';
-import { User as UserType, useAuth } from '@/contexts/AuthContext';
+import { Separator } from '@/components/ui/separator';
+import { 
+  User as UserIcon, 
+  Mail, 
+  Clock, 
+  Settings, 
+  LogOut,
+  Edit3,
+  Camera
+} from 'lucide-react';
+import { User, useAuth } from '@/contexts/AuthContext';
 
 interface UserProfileProps {
-  user: UserType | null;
+  user: User | null;
   onClose: () => void;
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
-  const { updateUserStatus, updateUserPresence, logout } = useAuth();
+  const { logout, updateUserStatus, updateUserPresence } = useAuth();
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [statusText, setStatusText] = useState(user?.status.text || '');
-  const [statusEmoji, setStatusEmoji] = useState(user?.status.emoji || '');
+  const [statusEmoji, setStatusEmoji] = useState(user?.status.emoji || '😀');
 
-  const predefinedStatuses = [
-    { emoji: '🏠', text: 'Working from home' },
-    { emoji: '🤒', text: 'Out sick' },
-    { emoji: '🌴', text: 'Vacationing' },
-    { emoji: '🚗', text: 'Commuting' },
-    { emoji: '📞', text: 'In a meeting' },
-    { emoji: '🎧', text: 'Focusing' },
-  ];
-
-  const handleStatusUpdate = () => {
-    updateUserStatus({ text: statusText, emoji: statusEmoji });
+  const handleStatusSave = () => {
+    updateUserStatus({
+      text: statusText,
+      emoji: statusEmoji
+    });
+    setIsEditingStatus(false);
   };
 
   const handlePresenceChange = (presence: 'active' | 'away' | 'offline' | 'dnd') => {
     updateUserPresence(presence);
   };
 
-  const getPresenceLabel = (presence: string) => {
-    switch (presence) {
+  const handleLogout = () => {
+    logout();
+    onClose();
+  };
+
+  const getPresenceText = () => {
+    switch (user?.presence) {
       case 'active': return 'Active';
       case 'away': return 'Away';
       case 'dnd': return 'Do not disturb';
@@ -45,302 +58,176 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
     }
   };
 
-  const getPresenceColor = (presence: string) => {
-    switch (presence) {
+  const getPresenceColor = () => {
+    switch (user?.presence) {
       case 'active': return 'bg-slack-green';
       case 'away': return 'border-2 border-slack-green bg-transparent';
       case 'dnd': return 'bg-slack-red';
+      case 'offline': return 'bg-gray-400';
       default: return 'bg-gray-400';
     }
   };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span className="text-18 font-bold text-slack-text-primary">Profile</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
+          <DialogTitle className="text-lg font-bold text-slack-text-primary">
+            Profile
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="advanced">Advanced</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="profile" className="space-y-6">
-            {/* Avatar and Basic Info */}
-            <div className="flex items-start space-x-4">
-              <div className="relative">
-                <div className="w-20 h-20 bg-slack-aubergine rounded-slack-xl flex items-center justify-center">
-                  <span className="text-white text-2xl font-bold">
-                    {user?.displayName?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute -bottom-2 -right-2 h-8 w-8 p-0 rounded-full border-2 border-white bg-white"
-                >
-                  <Camera className="w-3 h-3" />
-                </Button>
-                <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full ${getPresenceColor(user?.presence || 'offline')} border-2 border-white`}>
-                  {user?.presence === 'dnd' && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="w-2 h-0.5 bg-white rounded" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-slack-text-primary mb-1">
-                  {user?.displayName}
-                </h2>
-                <p className="text-13 text-slack-text-secondary mb-2">
-                  {getPresenceLabel(user?.presence || 'offline')}
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center text-13 text-slack-text-secondary">
-                    <Mail className="w-4 h-4 mr-2" />
-                    {user?.email}
-                  </div>
-                  <div className="flex items-center text-13 text-slack-text-secondary">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    {user?.timezone}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="space-y-4">
-              <Label className="text-15 font-bold text-slack-text-primary">
-                Set a status
-              </Label>
-              
-              <div className="grid grid-cols-2 gap-2">
-                {predefinedStatuses.map((status, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    onClick={() => {
-                      setStatusEmoji(status.emoji);
-                      setStatusText(status.text);
-                    }}
-                    className="justify-start h-10 text-13 border-slack-border hover:border-slack-aubergine"
-                  >
-                    <span className="mr-2">{status.emoji}</span>
-                    {status.text}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="flex space-x-2">
-                <Input
-                  type="text"
-                  placeholder="🙂"
-                  value={statusEmoji}
-                  onChange={(e) => setStatusEmoji(e.target.value)}
-                  className="w-16 text-center border-slack-border"
-                  maxLength={2}
-                />
-                <Input
-                  type="text"
-                  placeholder="What's your status?"
-                  value={statusText}
-                  onChange={(e) => setStatusText(e.target.value)}
-                  className="flex-1 border-slack-border"
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-slack-text-muted" />
-                <span className="text-13 text-slack-text-secondary">
-                  Clear after: Never
+        <div className="space-y-6">
+          {/* Avatar and Basic Info */}
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <div className="w-16 h-16 bg-slack-aubergine rounded-slack-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">
+                  {user?.displayName?.charAt(0).toUpperCase()}
                 </span>
               </div>
-
               <Button
-                onClick={handleStatusUpdate}
-                className="bg-slack-aubergine hover:bg-slack-aubergine/90 text-white"
+                variant="ghost"
+                size="sm"
+                className="absolute -bottom-1 -right-1 w-6 h-6 p-0 bg-white border border-gray-300 rounded-full"
               >
-                Save Status
+                <Camera className="w-3 h-3" />
+              </Button>
+              <div className={`absolute -bottom-1 -left-1 w-4 h-4 rounded-full ${getPresenceColor()}`} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-slack-text-primary">
+                {user?.displayName}
+              </h3>
+              <p className="text-sm text-slack-text-secondary">
+                {getPresenceText()}
+              </p>
+            </div>
+          </div>
+
+          {/* Status Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-slack-text-primary">Status</h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditingStatus(!isEditingStatus)}
+              >
+                <Edit3 className="w-4 h-4" />
               </Button>
             </div>
-
-            {/* Presence */}
-            <div className="space-y-4">
-              <Label className="text-15 font-bold text-slack-text-primary">
-                Presence
-              </Label>
-              
-              <div className="space-y-2">
-                {['active', 'away', 'dnd'].map((presence) => (
+            
+            {isEditingStatus ? (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={statusEmoji}
+                    onChange={(e) => setStatusEmoji(e.target.value)}
+                    className="w-16 text-center"
+                    maxLength={2}
+                  />
+                  <Input
+                    value={statusText}
+                    onChange={(e) => setStatusText(e.target.value)}
+                    placeholder="What's your status?"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
                   <Button
-                    key={presence}
                     variant="outline"
-                    onClick={() => handlePresenceChange(presence as any)}
-                    className={`w-full justify-start h-10 text-13 ${
-                      user?.presence === presence
-                        ? 'border-slack-aubergine bg-slack-light-gray'
-                        : 'border-slack-border'
-                    }`}
+                    size="sm"
+                    onClick={() => setIsEditingStatus(false)}
                   >
-                    <div className={`mr-3 w-3 h-3 rounded-full ${getPresenceColor(presence)}`}>
-                      {presence === 'dnd' && (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="w-1.5 h-0.5 bg-white rounded" />
-                        </div>
-                      )}
-                    </div>
-                    {getPresenceLabel(presence)}
+                    Cancel
                   </Button>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="account" className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label className="text-15 font-bold text-slack-text-primary">
-                  Full name
-                </Label>
-                <Input
-                  type="text"
-                  value={user?.displayName || ''}
-                  className="mt-2 border-slack-border"
-                  readOnly
-                />
-              </div>
-              
-              <div>
-                <Label className="text-15 font-bold text-slack-text-primary">
-                  Email address
-                </Label>
-                <Input
-                  type="email"
-                  value={user?.email || ''}
-                  className="mt-2 border-slack-border"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <Label className="text-15 font-bold text-slack-text-primary">
-                  Phone number
-                </Label>
-                <Input
-                  type="tel"
-                  placeholder="Add phone number"
-                  className="mt-2 border-slack-border"
-                />
-              </div>
-
-              <div>
-                <Label className="text-15 font-bold text-slack-text-primary">
-                  What I do
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Add your role or what you do"
-                  className="mt-2 border-slack-border"
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="notifications" className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-15 font-bold text-slack-text-primary">
-                    Desktop notifications
-                  </Label>
-                  <p className="text-13 text-slack-text-secondary">
-                    Get notified about new messages and activity
-                  </p>
+                  <Button
+                    size="sm"
+                    onClick={handleStatusSave}
+                    className="bg-slack-green hover:bg-slack-green/90"
+                  >
+                    Save
+                  </Button>
                 </div>
-                <Button variant="outline" className="border-slack-border">
-                  Configure
-                </Button>
               </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-15 font-bold text-slack-text-primary">
-                    Email notifications
-                  </Label>
-                  <p className="text-13 text-slack-text-secondary">
-                    Receive notifications via email
-                  </p>
-                </div>
-                <Button variant="outline" className="border-slack-border">
-                  Configure
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-15 font-bold text-slack-text-primary">
-                    Do not disturb
-                  </Label>
-                  <p className="text-13 text-slack-text-secondary">
-                    Pause notifications temporarily
-                  </p>
-                </div>
-                <Button variant="outline" className="border-slack-border">
-                  Set schedule
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="advanced" className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label className="text-15 font-bold text-slack-text-primary">
-                  Timezone
-                </Label>
-                <p className="text-13 text-slack-text-secondary mb-2">
-                  Current timezone: {user?.timezone}
+            ) : (
+              <div className="p-3 bg-slack-light-gray rounded-slack-md">
+                <p className="text-sm text-slack-text-primary">
+                  {user?.status.emoji} {user?.status.text || 'No status set'}
                 </p>
-                <Button variant="outline" className="border-slack-border">
-                  Change timezone
-                </Button>
               </div>
+            )}
+          </div>
 
-              <div>
-                <Label className="text-15 font-bold text-slack-text-primary">
-                  Language & region
-                </Label>
-                <p className="text-13 text-slack-text-secondary mb-2">
-                  English (US)
-                </p>
-                <Button variant="outline" className="border-slack-border">
-                  Change language
-                </Button>
-              </div>
+          <Separator />
 
-              <div className="pt-4 border-t border-slack-border">
+          {/* Presence Settings */}
+          <div className="space-y-3">
+            <h4 className="font-medium text-slack-text-primary">Set yourself as</h4>
+            <div className="space-y-2">
+              {[
+                { key: 'active', label: 'Active', color: 'bg-slack-green' },
+                { key: 'away', label: 'Away', color: 'border-2 border-slack-green bg-transparent' },
+                { key: 'dnd', label: 'Do not disturb', color: 'bg-slack-red' },
+              ].map((option) => (
                 <Button
-                  onClick={logout}
-                  variant="outline"
-                  className="border-slack-red text-slack-red hover:bg-slack-red hover:text-white"
+                  key={option.key}
+                  variant="ghost"
+                  onClick={() => handlePresenceChange(option.key as any)}
+                  className={`w-full justify-start ${
+                    user?.presence === option.key ? 'bg-blue-50' : ''
+                  }`}
                 >
-                  Sign out
+                  <div className={`w-3 h-3 rounded-full mr-3 ${option.color}`} />
+                  {option.label}
                 </Button>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* User Info */}
+          <div className="space-y-3">
+            <h4 className="font-medium text-slack-text-primary">Contact Information</h4>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-3 text-sm">
+                <Mail className="w-4 h-4 text-slack-text-secondary" />
+                <span className="text-slack-text-primary">{user?.email}</span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <Clock className="w-4 h-4 text-slack-text-secondary" />
+                <span className="text-slack-text-primary">{user?.timezone}</span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <UserIcon className="w-4 h-4 text-slack-text-secondary" />
+                <span className="text-slack-text-primary">{user?.role}</span>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+
+          <Separator />
+
+          {/* Actions */}
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+            >
+              <Settings className="w-4 h-4 mr-3" />
+              Account Settings
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="w-full justify-start text-slack-red hover:text-slack-red"
+            >
+              <LogOut className="w-4 h-4 mr-3" />
+              Sign out
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
