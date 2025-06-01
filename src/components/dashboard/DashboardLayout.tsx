@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageProvider, useMessages } from '@/contexts/MessageContext';
+import NavigationSidebar from './NavigationSidebar';
 import Sidebar from './Sidebar';
 import ChatArea from './ChatArea';
 import ThreadSidebar from './ThreadSidebar';
@@ -29,10 +30,13 @@ const DashboardContent: React.FC = () => {
     };
     setChannels(prev => [...prev, newChannel]);
     setSelectedChannel(newChannel.id);
+    setShowCreateChannel(false);
   };
 
   return (
     <div className="flex h-screen bg-slack-white overflow-hidden">
+      <NavigationSidebar />
+      
       <Sidebar 
         user={user}
         workspace={workspace}
@@ -40,12 +44,13 @@ const DashboardContent: React.FC = () => {
         onChannelSelect={setSelectedChannel}
         onUserProfileClick={() => setShowUserProfile(true)}
         onCreateChannel={() => setShowCreateChannel(true)}
+        channels={channels}
       />
       
       <div className="flex flex-1 relative">
         <div 
           className={`flex-1 transition-all duration-300 ease-in-out ${
-            selectedThread ? 'w-[calc(100%-320px)]' : 'w-full'
+            selectedThread ? 'mr-96' : ''
           }`}
         >
           <ChatArea 
@@ -54,15 +59,11 @@ const DashboardContent: React.FC = () => {
           />
         </div>
         
-        <div 
-          className={`absolute right-0 top-0 h-full transition-all duration-300 ease-in-out transform ${
-            selectedThread 
-              ? 'translate-x-0 opacity-100 w-80' 
-              : 'translate-x-full opacity-0 w-0'
-          }`}
-        >
-          <ThreadSidebar />
-        </div>
+        {selectedThread && (
+          <div className="absolute right-0 top-0 h-full w-96 transition-all duration-300 ease-in-out">
+            <ThreadSidebar />
+          </div>
+        )}
       </div>
 
       {showUserProfile && (

@@ -16,7 +16,14 @@ import {
   BellOff
 } from 'lucide-react';
 import { User, Workspace } from '@/contexts/AuthContext';
+import { useMessages } from '@/contexts/MessageContext';
 import InviteTeammatesModal from './InviteTeammatesModal';
+
+interface Channel {
+  id: string;
+  name: string;
+  isPrivate: boolean;
+}
 
 interface SidebarProps {
   user: User | null;
@@ -25,6 +32,7 @@ interface SidebarProps {
   onChannelSelect: (channel: string) => void;
   onUserProfileClick: () => void;
   onCreateChannel?: () => void;
+  channels: Channel[];
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -33,19 +41,26 @@ const Sidebar: React.FC<SidebarProps> = ({
   selectedChannel,
   onChannelSelect,
   onUserProfileClick,
-  onCreateChannel
+  onCreateChannel,
+  channels
 }) => {
+  const { messages } = useMessages();
   const [showChannels, setShowChannels] = useState(true);
   const [showDirectMessages, setShowDirectMessages] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
 
-  const channels = [
-    { id: 'general', name: 'general', isPrivate: false, unread: 0 },
-    { id: 'random', name: 'random', isPrivate: false, unread: 3 },
-    { id: 'design', name: 'design', isPrivate: true, unread: 1 },
-    { id: 'development', name: 'development', isPrivate: false, unread: 0 },
-  ];
+  const getUnreadCount = (channelId: string) => {
+    const channelMessages = messages[channelId] || [];
+    // For demo purposes, return random unread counts for some channels
+    const unreadCounts: { [key: string]: number } = {
+      'random': 3,
+      'design': 1,
+      'general': 0,
+      'development': 0
+    };
+    return unreadCounts[channelId] || 0;
+  };
 
   const directMessages = [
     { id: 'dm-1', name: 'Sarah Wilson', presence: 'active', unread: 2 },
@@ -76,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      <div className="w-64 bg-slack-aubergine text-white flex flex-col">
+      <div className="w-64 bg-violet-900 text-white flex flex-col">
         {/* Workspace Header */}
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center justify-between">
@@ -149,28 +164,31 @@ const Sidebar: React.FC<SidebarProps> = ({
             </Button>
             {showChannels && (
               <div className="mt-2 space-y-1">
-                {channels.map((channel) => (
-                  <Button
-                    key={channel.id}
-                    variant="ghost"
-                    onClick={() => onChannelSelect(channel.id)}
-                    className={`w-full justify-start text-white hover:bg-white/10 h-6 text-13 font-normal pl-6 ${
-                      selectedChannel === channel.id ? 'bg-white/20' : ''
-                    }`}
-                  >
-                    {channel.isPrivate ? (
-                      <Lock className="mr-2 w-3 h-3" />
-                    ) : (
-                      <Hash className="mr-2 w-3 h-3" />
-                    )}
-                    <span className="truncate">{channel.name}</span>
-                    {channel.unread > 0 && (
-                      <span className="ml-auto bg-slack-red text-white text-11 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                        {channel.unread}
-                      </span>
-                    )}
-                  </Button>
-                ))}
+                {channels.map((channel) => {
+                  const unreadCount = getUnreadCount(channel.id);
+                  return (
+                    <Button
+                      key={channel.id}
+                      variant="ghost"
+                      onClick={() => onChannelSelect(channel.id)}
+                      className={`w-full justify-start text-white hover:bg-white/10 h-6 text-13 font-normal pl-6 ${
+                        selectedChannel === channel.id ? 'bg-white/20' : ''
+                      }`}
+                    >
+                      {channel.isPrivate ? (
+                        <Lock className="mr-2 w-3 h-3" />
+                      ) : (
+                        <Hash className="mr-2 w-3 h-3" />
+                      )}
+                      <span className="truncate">{channel.name}</span>
+                      {unreadCount > 0 && (
+                        <span className="ml-auto bg-slack-red text-white text-11 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  );
+                })}
                 <Button
                   variant="ghost"
                   onClick={onCreateChannel}

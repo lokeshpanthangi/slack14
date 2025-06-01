@@ -73,19 +73,19 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-slack-chat min-w-0">
+    <div className="flex flex-col h-full w-full bg-white min-w-0">
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slack-input-border bg-slack-chat/95 backdrop-blur-sm flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center space-x-3 min-w-0">
-          <div className="text-slack-primary flex-shrink-0">
+          <div className="text-gray-700 flex-shrink-0">
             {getChannelIcon()}
           </div>
           <div className="min-w-0">
-            <h2 className="font-bold text-lg text-slack-primary truncate">
+            <h2 className="font-bold text-lg text-gray-900 truncate">
               {getChannelName()}
             </h2>
             {!channel.startsWith('dm-') && (
-              <p className="text-sm text-slack-secondary">
+              <p className="text-sm text-gray-500">
                 {channelMessages.length} {channelMessages.length === 1 ? 'member' : 'members'}
               </p>
             )}
@@ -93,19 +93,19 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
         </div>
         
         <div className="flex items-center space-x-2 flex-shrink-0">
-          <Button variant="ghost" size="sm" className="text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover transition-colors duration-200">
+          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700 hover:bg-gray-100">
             <Star className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover transition-colors duration-200">
+          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700 hover:bg-gray-100">
             <Phone className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover transition-colors duration-200">
+          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700 hover:bg-gray-100">
             <Video className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover transition-colors duration-200">
+          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700 hover:bg-gray-100">
             <Info className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover transition-colors duration-200">
+          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700 hover:bg-gray-100">
             <Search className="w-4 h-4" />
           </Button>
         </div>
@@ -115,15 +115,15 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
       <div className="flex-1 overflow-y-auto min-h-0">
         {channelMessages.length === 0 ? (
           <div className="text-center py-8 px-4">
-            <div className="w-16 h-16 bg-slack-input rounded-lg flex items-center justify-center mx-auto mb-4">
-              <div className="text-slack-secondary">
+            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="text-gray-400">
                 {getChannelIcon()}
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slack-primary mb-2">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               This is the very beginning of #{getChannelName()}
             </h3>
-            <p className="text-slack-secondary">
+            <p className="text-gray-500">
               {channel.startsWith('dm-') 
                 ? 'This is the start of your conversation.'
                 : 'This channel is for workspace-wide communication and announcements.'
@@ -146,7 +146,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t border-slack-input-border bg-slack-chat/95 backdrop-blur-sm flex-shrink-0">
+      <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
         <MessageInput
           channelId={channel}
           placeholder={`Message ${channel.startsWith('dm-') ? getChannelName() : `#${getChannelName()}`}`}
