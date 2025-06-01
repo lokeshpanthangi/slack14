@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageProvider, useMessages } from '@/contexts/MessageContext';
@@ -68,6 +69,11 @@ const DashboardContent: React.FC = () => {
     setShowWorkspaceSettings(true);
   };
 
+  const handleInviteTeammates = () => {
+    console.log('Invite teammates clicked');
+    // TODO: Implement invite teammates functionality
+  };
+
   return (
     <div className="flex h-screen bg-chat-dark overflow-hidden">
       <NavigationSidebar 
@@ -89,10 +95,11 @@ const DashboardContent: React.FC = () => {
         <Sidebar 
           user={user}
           workspace={workspace}
-          selectedChannel={selectedChannel}
+          currentChannel={selectedChannel}
           onChannelSelect={setSelectedChannel}
-          onUserProfileClick={() => setShowUserProfile(true)}
+          onProfileClick={() => setShowUserProfile(true)}
           onCreateChannel={() => setShowCreateChannel(true)}
+          onInviteTeammates={handleInviteTeammates}
           channels={channels}
         />
       )}
