@@ -22,6 +22,8 @@ interface ChatAreaProps {
 
 const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
   const { messages } = useMessages();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelMessages = messages[channel] || [];
 
@@ -74,6 +76,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
     return currentMessage.userId === previousMessage.userId && timeDiff <= 5 * 60 * 1000;
   };
 
+  const handleStarClick = () => {
+    setIsFavorite(!isFavorite);
+  };
+
+  const handleSearchClick = () => {
+    setShowSearch(!showSearch);
+  };
+
   return (
     <div className="flex flex-col h-full w-full bg-chat-dark min-w-0">
       {/* Chat Header */}
@@ -83,7 +93,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
             {getChannelIcon()}
           </div>
           <div className="min-w-0">
-            <h2 className="font-bold text-lg text-slack-white truncate">
+            <h2 className="font-bold text-lg text-white truncate">
               {getChannelName()}
             </h2>
             {!channel.startsWith('dm-') && (
@@ -95,8 +105,15 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
         </div>
         
         <div className="flex items-center space-x-2 flex-shrink-0">
-          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-200 hover:bg-gray-700">
-            <Star className="w-4 h-4" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleStarClick}
+            className={`hover:text-gray-200 hover:bg-gray-700 ${
+              isFavorite ? 'text-yellow-400' : 'text-gray-400'
+            }`}
+          >
+            <Star className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
           </Button>
           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-200 hover:bg-gray-700">
             <Phone className="w-4 h-4" />
@@ -107,11 +124,30 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-200 hover:bg-gray-700">
             <Info className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-200 hover:bg-gray-700">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleSearchClick}
+            className={`hover:text-gray-200 hover:bg-gray-700 ${
+              showSearch ? 'text-white bg-gray-700' : 'text-gray-400'
+            }`}
+          >
             <Search className="w-4 h-4" />
           </Button>
         </div>
       </div>
+
+      {/* Search Bar (if active) */}
+      {showSearch && (
+        <div className="p-4 border-b border-gray-700 bg-chat-dark">
+          <input
+            type="text"
+            placeholder="Search in this conversation..."
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        </div>
+      )}
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto min-h-0">
@@ -122,7 +158,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
                 {getChannelIcon()}
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slack-white mb-2">
+            <h3 className="text-xl font-bold text-white mb-2">
               This is the very beginning of #{getChannelName()}
             </h3>
             <p className="text-gray-400">

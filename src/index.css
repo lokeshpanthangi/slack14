@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
 @tailwind base;
 @tailwind components;
@@ -107,6 +108,21 @@
     line-height: 1.46666667;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Dark theme for modals and popups */
+  .modal-dark {
+    @apply bg-gray-800 text-white border-gray-600;
+  }
+
+  .modal-dark input,
+  .modal-dark textarea,
+  .modal-dark select {
+    @apply bg-gray-700 border-gray-600 text-white placeholder-gray-400;
+  }
+
+  .modal-dark button {
+    @apply text-white;
   }
 }
 

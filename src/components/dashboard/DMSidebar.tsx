@@ -50,7 +50,7 @@ const DMSidebar: React.FC<DMSidebarProps> = ({
   );
 
   return (
-    <div className="w-64 bg-violet-800 text-white flex flex-col">
+    <div className="w-64 bg-slack-dark-aubergine text-white flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center justify-between mb-4">

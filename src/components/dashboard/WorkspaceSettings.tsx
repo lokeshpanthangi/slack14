@@ -3,16 +3,15 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Settings, 
-  Users, 
-  Shield, 
-  Image,
+  X, 
+  Upload,
+  Users,
+  Shield,
   Bell,
-  Trash2,
-  Plus
+  Palette,
+  Settings,
+  Trash2
 } from 'lucide-react';
 
 interface WorkspaceSettingsProps {
@@ -21,204 +20,219 @@ interface WorkspaceSettingsProps {
 }
 
 const WorkspaceSettings: React.FC<WorkspaceSettingsProps> = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState('general');
   const [workspaceName, setWorkspaceName] = useState('My Workspace');
   const [workspaceDescription, setWorkspaceDescription] = useState('A collaborative workspace for our team');
 
+  if (!isOpen) return null;
+
+  const tabs = [
+    { id: 'general', label: 'General', icon: Settings },
+    { id: 'members', label: 'Members', icon: Users },
+    { id: 'permissions', label: 'Permissions', icon: Shield },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+  ];
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-xl font-bold flex items-center">
-            <Settings className="w-5 h-5 mr-2" />
-            Workspace Settings
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="p-6 pt-4">
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="permissions">Permissions</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
-            </TabsList>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex">
+        {/* Sidebar */}
+        <div className="w-64 bg-gray-900 rounded-l-lg border-r border-gray-700">
+          <div className="p-4 border-b border-gray-700">
+            <h2 className="text-lg font-semibold text-white">Workspace Settings</h2>
+          </div>
+          <nav className="p-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-gray-700 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
-            <TabsContent value="general" className="mt-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">General Settings</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Workspace Name
-                    </label>
-                    <Input
-                      value={workspaceName}
-                      onChange={(e) => setWorkspaceName(e.target.value)}
-                      className="max-w-md"
-                    />
-                  </div>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <h3 className="text-lg font-semibold text-white">
+              {tabs.find(tab => tab.id === activeTab)?.label}
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <Textarea
-                      value={workspaceDescription}
-                      onChange={(e) => setWorkspaceDescription(e.target.value)}
-                      className="max-w-md"
-                      rows={3}
-                    />
-                  </div>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {activeTab === 'general' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Workspace Name
+                  </label>
+                  <Input
+                    value={workspaceName}
+                    onChange={(e) => setWorkspaceName(e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Workspace Icon
-                    </label>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-violet-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-2xl">M</span>
-                      </div>
-                      <Button variant="outline" className="flex items-center">
-                        <Image className="w-4 h-4 mr-2" />
-                        Change Icon
-                      </Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Description
+                  </label>
+                  <Textarea
+                    value={workspaceDescription}
+                    onChange={(e) => setWorkspaceDescription(e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Workspace Icon
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-slack-aubergine rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-2xl">M</span>
                     </div>
+                    <Button className="bg-gray-700 text-white hover:bg-gray-600">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Image
+                    </Button>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="members" className="mt-6 space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Workspace Members</h3>
-                  <Button className="flex items-center">
-                    <Plus className="w-4 h-4 mr-2" />
+                <div className="pt-4 border-t border-gray-700">
+                  <h4 className="text-red-400 font-medium mb-2">Danger Zone</h4>
+                  <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Workspace
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'members' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-medium">Workspace Members</h4>
+                  <Button className="bg-slack-aubergine hover:bg-slack-dark-aubergine text-white">
                     Invite Members
                   </Button>
                 </div>
-                
-                <div className="space-y-3">
-                  {[
-                    { name: 'Sarah Wilson', email: 'sarah@company.com', role: 'Admin' },
-                    { name: 'Mike Chen', email: 'mike@company.com', role: 'Member' },
-                    { name: 'Emma Davis', email: 'emma@company.com', role: 'Member' },
-                  ].map((member, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="space-y-2">
+                  {['Sarah Wilson', 'Mike Chen', 'Emma Davis', 'John Smith'].map((member, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-violet-100 rounded-full flex items-center justify-center">
-                          <span className="text-violet-600 font-medium">
-                            {member.name.split(' ').map(n => n[0]).join('')}
+                        <div className="w-8 h-8 bg-slack-aubergine rounded-md flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {member.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{member.name}</p>
-                          <p className="text-sm text-gray-500">{member.email}</p>
-                        </div>
+                        <span className="text-white">{member}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">{member.role}</span>
-                        <Button variant="ghost" size="sm">
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      <select className="bg-gray-600 text-white border-gray-500 rounded px-2 py-1">
+                        <option>Admin</option>
+                        <option>Member</option>
+                        <option>Guest</option>
+                      </select>
                     </div>
                   ))}
                 </div>
               </div>
-            </TabsContent>
+            )}
 
-            <TabsContent value="permissions" className="mt-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Permissions & Roles</h3>
-                
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">Channel Creation</h4>
-                      <Button variant="outline" size="sm">Edit</Button>
+            {activeTab === 'permissions' && (
+              <div className="space-y-4">
+                <h4 className="text-white font-medium">Channel Permissions</h4>
+                <div className="space-y-3">
+                  {[
+                    'Create public channels',
+                    'Create private channels',
+                    'Archive channels',
+                    'Delete messages',
+                    'Pin messages'
+                  ].map((permission, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                      <span className="text-white">{permission}</span>
+                      <select className="bg-gray-600 text-white border-gray-500 rounded px-2 py-1">
+                        <option>Everyone</option>
+                        <option>Admins only</option>
+                        <option>Nobody</option>
+                      </select>
                     </div>
-                    <p className="text-sm text-gray-600">Who can create public and private channels</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'notifications' && (
+              <div className="space-y-4">
+                <h4 className="text-white font-medium">Default Notification Settings</h4>
+                <div className="space-y-3">
+                  {[
+                    'All new messages',
+                    'Direct messages and mentions',
+                    'Nothing'
+                  ].map((setting, index) => (
+                    <label key={index} className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg cursor-pointer">
+                      <input type="radio" name="notifications" className="text-slack-aubergine" />
+                      <span className="text-white">{setting}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'appearance' && (
+              <div className="space-y-4">
+                <h4 className="text-white font-medium">Theme</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-700 rounded-lg border border-slack-aubergine">
+                    <div className="text-white font-medium mb-2">Dark Theme</div>
+                    <div className="text-gray-400 text-sm">Current theme</div>
                   </div>
-
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">Message Deletion</h4>
-                      <Button variant="outline" size="sm">Edit</Button>
-                    </div>
-                    <p className="text-sm text-gray-600">Who can delete messages in channels</p>
-                  </div>
-
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">File Sharing</h4>
-                      <Button variant="outline" size="sm">Edit</Button>
-                    </div>
-                    <p className="text-sm text-gray-600">Who can share files and set sharing permissions</p>
+                  <div className="p-4 bg-gray-700 rounded-lg border border-gray-600">
+                    <div className="text-white font-medium mb-2">Light Theme</div>
+                    <div className="text-gray-400 text-sm">Classic appearance</div>
                   </div>
                 </div>
               </div>
-            </TabsContent>
+            )}
+          </div>
 
-            <TabsContent value="notifications" className="mt-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Notification Settings</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Default Notification Schedule</h4>
-                      <p className="text-sm text-gray-600">Set default quiet hours for all members</p>
-                    </div>
-                    <Button variant="outline">Configure</Button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Email Notifications</h4>
-                      <p className="text-sm text-gray-600">Configure email notification preferences</p>
-                    </div>
-                    <Button variant="outline">Settings</Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="advanced" className="mt-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Advanced Settings</h3>
-                
-                <div className="space-y-4">
-                  <div className="p-4 border border-red-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-red-600">Delete Workspace</h4>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </Button>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      Permanently delete this workspace and all its data. This action cannot be undone.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+          {/* Footer */}
+          <div className="flex items-center justify-end space-x-3 p-4 border-t border-gray-700">
+            <Button variant="outline" onClick={onClose} className="border-gray-600 text-gray-400 hover:text-white">
+              Cancel
+            </Button>
+            <Button className="bg-slack-aubergine hover:bg-slack-dark-aubergine text-white">
+              Save Changes
+            </Button>
+          </div>
         </div>
-
-        <div className="flex justify-end space-x-3 p-6 pt-0 border-t border-gray-200">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button>
-            Save Changes
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 

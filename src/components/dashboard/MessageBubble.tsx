@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -40,7 +41,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     formattedContent = formattedContent
       .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
       .replace(/_([^_]+)_/g, '<em>$1</em>')
-      .replace(/`([^`]+)`/g, '<code class="bg-slack-input px-1 rounded text-slack-primary">$1</code>');
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-700 px-1 rounded text-white">$1</code>');
     
     return formattedContent;
   };
@@ -94,7 +95,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
         {isGrouped && (
-          <span className="text-xs text-slack-muted opacity-0 group-hover:opacity-100">
+          <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100">
             {formatTimestamp(message.timestamp)}
           </span>
         )}
@@ -104,16 +105,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       <div className="flex-1 min-w-0">
         {!isGrouped && (
           <div className="flex items-center space-x-2 mb-1">
-            <span className="font-bold text-slack-primary">{message.username}</span>
-            <span className="text-xs text-slack-muted">{formatTimestamp(message.timestamp)}</span>
+            <span className="font-bold text-white">{message.username}</span>
+            <span className="text-xs text-gray-400">{formatTimestamp(message.timestamp)}</span>
             {message.edited && (
-              <span className="text-xs text-slack-muted">(edited)</span>
+              <span className="text-xs text-gray-400">(edited)</span>
             )}
           </div>
         )}
         
         <div 
-          className="text-slack-primary"
+          className="text-white"
           dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
         />
 
@@ -124,14 +125,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               <button
                 key={index}
                 onClick={() => handleReaction(reaction.emoji)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs border hover:bg-slack-input ${
+                className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs border hover:bg-gray-700 ${
                   user && reaction.users.includes(user.id) 
                     ? 'bg-blue-600/20 border-blue-500/30' 
-                    : 'bg-slack-input border-slack-input-border'
+                    : 'bg-gray-700 border-gray-600'
                 }`}
               >
                 <span>{reaction.emoji}</span>
-                <span className="font-medium text-slack-primary">{reaction.count}</span>
+                <span className="font-medium text-white">{reaction.count}</span>
               </button>
             ))}
           </div>
@@ -145,7 +146,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           >
             <MessageSquare className="w-4 h-4" />
             <span>{message.replyCount} {message.replyCount === 1 ? 'reply' : 'replies'}</span>
-            <span className="text-slack-muted">
+            <span className="text-gray-400">
               Last reply {formatTimestamp(message.replies[message.replies.length - 1]?.timestamp || message.timestamp)}
             </span>
           </button>
@@ -155,24 +156,24 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       {/* Message Actions */}
       {showActions && (
         <div className="flex-shrink-0 relative">
-          <div className="flex items-center space-x-1 bg-slack-input border border-slack-input-border rounded-lg shadow-sm px-1 py-0.5">
+          <div className="flex items-center space-x-1 bg-gray-700 border border-gray-600 rounded-lg shadow-sm px-1 py-0.5">
             <div className="relative">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+                className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
               >
                 <Smile className="w-4 h-4" />
               </Button>
               
               {showEmojiPicker && (
-                <div className="absolute top-full right-0 mt-1 bg-slack-input border border-slack-input-border rounded-lg shadow-lg p-2 grid grid-cols-4 gap-1 z-50">
+                <div className="absolute top-full right-0 mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-lg p-2 grid grid-cols-4 gap-1 z-50">
                   {commonEmojis.map((emoji) => (
                     <button
                       key={emoji}
                       onClick={() => handleReaction(emoji)}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-slack-message-hover rounded"
+                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-600 rounded"
                     >
                       {emoji}
                     </button>
@@ -185,7 +186,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleReplyClick}
-              className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+              className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
             >
               <Reply className="w-4 h-4" />
             </Button>
@@ -193,7 +194,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 text-slack-secondary hover:text-slack-primary hover:bg-slack-message-hover"
+              className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-600"
             >
               <MoreHorizontal className="w-4 h-4" />
             </Button>
