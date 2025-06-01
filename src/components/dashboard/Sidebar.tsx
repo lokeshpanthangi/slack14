@@ -91,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      <div className="w-64 bg-violet-900 text-white flex flex-col">
+      <div className="w-64 bg-slack-dark-aubergine text-white flex flex-col">
         {/* Workspace Header */}
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center justify-between">
@@ -121,7 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-slack-md h-8 text-13"
+              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-md h-8 text-13"
             />
           </div>
         </div>
@@ -257,7 +257,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           >
             <div className="flex items-center">
               <div className="relative mr-3">
-                <div className="w-8 h-8 bg-white/20 rounded-slack-md flex items-center justify-center">
+                <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center">
                   <span className="text-white font-bold text-13">
                     {user?.displayName?.charAt(0).toUpperCase()}
                   </span>
