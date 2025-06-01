@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Hash, 
   Users, 
@@ -8,7 +9,8 @@ import {
   Phone, 
   Video, 
   Info, 
-  Search
+  Search,
+  X
 } from 'lucide-react';
 import { User } from '@/contexts/AuthContext';
 import { useMessages } from '@/contexts/MessageContext';
@@ -24,6 +26,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
   const { messages } = useMessages();
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelMessages = messages[channel] || [];
 
@@ -78,11 +81,22 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
 
   const handleStarClick = () => {
     setIsFavorite(!isFavorite);
+    // Here you would typically save this to a favorites list
   };
 
   const handleSearchClick = () => {
     setShowSearch(!showSearch);
+    if (!showSearch) {
+      setSearchQuery('');
+    }
   };
+
+  const filteredMessages = searchQuery.trim() 
+    ? channelMessages.filter(message => 
+        message.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        message.username.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : channelMessages;
 
   return (
     <div className="flex flex-col h-full w-full bg-chat-dark min-w-0">
@@ -140,37 +154,62 @@ const ChatArea: React.FC<ChatAreaProps> = ({ channel, user }) => {
       {/* Search Bar (if active) */}
       {showSearch && (
         <div className="p-4 border-b border-gray-700 bg-chat-dark">
-          <input
-            type="text"
-            placeholder="Search in this conversation..."
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            autoFocus
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder={`Search in ${getChannelName()}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 text-gray-400 hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="text-xs text-gray-400 mt-2">
+              {filteredMessages.length} result{filteredMessages.length !== 1 ? 's' : ''} found
+            </p>
+          )}
         </div>
       )}
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {channelMessages.length === 0 ? (
+        {filteredMessages.length === 0 ? (
           <div className="text-center py-8 px-4">
             <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center mx-auto mb-4">
               <div className="text-gray-400">
-                {getChannelIcon()}
+                {searchQuery ? <Search className="w-6 h-6" /> : getChannelIcon()}
               </div>
             </div>
             <h3 className="text-xl font-bold text-white mb-2">
-              This is the very beginning of #{getChannelName()}
+              {searchQuery 
+                ? 'No messages found' 
+                : `This is the very beginning of ${getChannelName()}`
+              }
             </h3>
             <p className="text-gray-400">
-              {channel.startsWith('dm-') 
-                ? 'This is the start of your conversation.'
-                : 'This channel is for workspace-wide communication and announcements.'
+              {searchQuery 
+                ? `No messages match "${searchQuery}" in this channel.`
+                : channel.startsWith('dm-') 
+                  ? 'This is the start of your conversation.'
+                  : 'This channel is for workspace-wide communication and announcements.'
               }
             </p>
           </div>
         ) : (
           <div className="pb-4">
-            {channelMessages.map((message, index) => (
+            {filteredMessages.map((message, index) => (
               <MessageBubble
                 key={message.id}
                 message={message}

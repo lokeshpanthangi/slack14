@@ -70,9 +70,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-slack-text-primary">
+          <DialogTitle className="text-lg font-bold text-white">
             Profile
           </DialogTitle>
         </DialogHeader>
@@ -81,7 +81,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
           {/* Avatar and Basic Info */}
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-slack-aubergine rounded-slack-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-slack-aubergine rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">
                   {user?.displayName?.charAt(0).toUpperCase()}
                 </span>
@@ -89,17 +89,17 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute -bottom-1 -right-1 w-6 h-6 p-0 bg-white border border-gray-300 rounded-full"
+                className="absolute -bottom-1 -right-1 w-6 h-6 p-0 bg-gray-700 border border-gray-600 rounded-full hover:bg-gray-600"
               >
-                <Camera className="w-3 h-3" />
+                <Camera className="w-3 h-3 text-white" />
               </Button>
               <div className={`absolute -bottom-1 -left-1 w-4 h-4 rounded-full ${getPresenceColor()}`} />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-lg text-slack-text-primary">
+              <h3 className="font-bold text-lg text-white">
                 {user?.displayName}
               </h3>
-              <p className="text-sm text-slack-text-secondary">
+              <p className="text-sm text-gray-400">
                 {getPresenceText()}
               </p>
             </div>
@@ -108,11 +108,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
           {/* Status Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-slack-text-primary">Status</h4>
+              <h4 className="font-medium text-white">Status</h4>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsEditingStatus(!isEditingStatus)}
+                className="text-gray-400 hover:text-white hover:bg-gray-700"
               >
                 <Edit3 className="w-4 h-4" />
               </Button>
@@ -124,14 +125,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
                   <Input
                     value={statusEmoji}
                     onChange={(e) => setStatusEmoji(e.target.value)}
-                    className="w-16 text-center"
+                    className="w-16 text-center bg-gray-700 border-gray-600 text-white"
                     maxLength={2}
                   />
                   <Input
                     value={statusText}
                     onChange={(e) => setStatusText(e.target.value)}
                     placeholder="What's your status?"
-                    className="flex-1"
+                    className="flex-1 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                   />
                 </div>
                 <div className="flex justify-end space-x-2">
@@ -139,6 +140,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsEditingStatus(false)}
+                    className="border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700"
                   >
                     Cancel
                   </Button>
@@ -152,19 +154,19 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
                 </div>
               </div>
             ) : (
-              <div className="p-3 bg-slack-light-gray rounded-slack-md">
-                <p className="text-sm text-slack-text-primary">
+              <div className="p-3 bg-gray-700 rounded-lg">
+                <p className="text-sm text-white">
                   {user?.status.emoji} {user?.status.text || 'No status set'}
                 </p>
               </div>
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-gray-600" />
 
           {/* Presence Settings */}
           <div className="space-y-3">
-            <h4 className="font-medium text-slack-text-primary">Set yourself as</h4>
+            <h4 className="font-medium text-white">Set yourself as</h4>
             <div className="space-y-2">
               {[
                 { key: 'active', label: 'Active', color: 'bg-slack-green' },
@@ -175,8 +177,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
                   key={option.key}
                   variant="ghost"
                   onClick={() => handlePresenceChange(option.key as any)}
-                  className={`w-full justify-start ${
-                    user?.presence === option.key ? 'bg-blue-50' : ''
+                  className={`w-full justify-start text-white hover:bg-gray-700 ${
+                    user?.presence === option.key ? 'bg-gray-700' : ''
                   }`}
                 >
                   <div className={`w-3 h-3 rounded-full mr-3 ${option.color}`} />
@@ -186,34 +188,34 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-gray-600" />
 
           {/* User Info */}
           <div className="space-y-3">
-            <h4 className="font-medium text-slack-text-primary">Contact Information</h4>
+            <h4 className="font-medium text-white">Contact Information</h4>
             <div className="space-y-2">
               <div className="flex items-center space-x-3 text-sm">
-                <Mail className="w-4 h-4 text-slack-text-secondary" />
-                <span className="text-slack-text-primary">{user?.email}</span>
+                <Mail className="w-4 h-4 text-gray-400" />
+                <span className="text-white">{user?.email}</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
-                <Clock className="w-4 h-4 text-slack-text-secondary" />
-                <span className="text-slack-text-primary">{user?.timezone}</span>
+                <Clock className="w-4 h-4 text-gray-400" />
+                <span className="text-white">{user?.timezone}</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
-                <UserIcon className="w-4 h-4 text-slack-text-secondary" />
-                <span className="text-slack-text-primary">{user?.role}</span>
+                <UserIcon className="w-4 h-4 text-gray-400" />
+                <span className="text-white">{user?.role}</span>
               </div>
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-gray-600" />
 
           {/* Actions */}
           <div className="space-y-2">
             <Button
               variant="ghost"
-              className="w-full justify-start"
+              className="w-full justify-start text-white hover:bg-gray-700"
             >
               <Settings className="w-4 h-4 mr-3" />
               Account Settings
@@ -221,7 +223,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onClose }) => {
             <Button
               variant="ghost"
               onClick={handleLogout}
-              className="w-full justify-start text-slack-red hover:text-slack-red"
+              className="w-full justify-start text-slack-red hover:text-slack-red hover:bg-gray-700"
             >
               <LogOut className="w-4 h-4 mr-3" />
               Sign out

@@ -13,7 +13,7 @@ import {
   Hash,
   Send,
   Image,
-  File
+  X
 } from 'lucide-react';
 import { useMessages } from '@/contexts/MessageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +47,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
     'Smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '🫠', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '☺️', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🫢', '🫣', '🤫', '🤔'],
     'Gestures': ['👍', '👎', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '🫵', '👋', '🤚', '🖐️', '✋', '🖖', '🫱', '🫲', '🫳', '🫴', '👏', '🙌', '🤝', '👐', '🤲', '🙏'],
     'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'],
-    'Objects': ['📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎬', '📺', '📻', '🎵', '🎶', '🎤', '🎧', '📢', '📣', '📯', '🔔', '🔕']
+    'Objects': ['📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎬', '📺', '📻', '🎵', '🎶', '🎤', '🎧', '📢', '📣', '📯', '🔔', '🔕'],
+    'Animals': ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗'],
+    'Food': ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯']
   };
   
   const workspaceMembers = [
@@ -174,46 +176,50 @@ const MessageInput: React.FC<MessageInputProps> = ({
     <div className="relative">
       {/* Mentions Dropdown */}
       {showMentions && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full left-0 mb-2 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50 w-64">
-          {filteredMembers.map((member) => (
-            <button
-              key={member.id}
-              onClick={() => insertMention(member.username)}
-              className="w-full text-left px-3 py-2 hover:bg-gray-700 flex items-center space-x-2 text-white"
-            >
-              <div className="w-6 h-6 bg-slack-aubergine rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
-                  {member.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <div className="text-white font-medium">{member.name}</div>
-                <div className="text-gray-400 text-sm">@{member.username}</div>
-              </div>
-            </button>
-          ))}
+        <div className="absolute bottom-full left-0 mb-2 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 z-50 w-64 overflow-hidden">
+          <div className="max-h-48 overflow-y-auto scrollbar-hide">
+            {filteredMembers.map((member) => (
+              <button
+                key={member.id}
+                onClick={() => insertMention(member.username)}
+                className="w-full text-left px-3 py-2 hover:bg-gray-700 flex items-center space-x-2 text-white"
+              >
+                <div className="w-6 h-6 bg-slack-aubergine rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">
+                    {member.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-white font-medium">{member.name}</div>
+                  <div className="text-gray-400 text-sm">@{member.username}</div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Enhanced Emoji Picker */}
       {showEmojiPicker && (
-        <div className="absolute bottom-full right-0 mb-2 bg-gray-800 border border-gray-600 rounded-lg shadow-lg p-3 z-50 w-80 max-h-64 overflow-y-auto">
-          {Object.entries(emojiCategories).map(([category, emojis]) => (
-            <div key={category} className="mb-3">
-              <h4 className="text-xs font-semibold text-gray-400 mb-2">{category}</h4>
-              <div className="grid grid-cols-8 gap-1">
-                {emojis.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => insertEmoji(emoji)}
-                    className="w-8 h-8 flex items-center justify-center hover:bg-gray-700 rounded text-lg"
-                  >
-                    {emoji}
-                  </button>
-                ))}
+        <div className="absolute bottom-full right-0 mb-2 bg-gray-800 border border-gray-600 rounded-lg shadow-lg p-3 z-50 w-80 max-h-64 overflow-hidden">
+          <div className="max-h-64 overflow-y-auto scrollbar-hide">
+            {Object.entries(emojiCategories).map(([category, emojis]) => (
+              <div key={category} className="mb-3">
+                <h4 className="text-xs font-semibold text-gray-400 mb-2">{category}</h4>
+                <div className="grid grid-cols-8 gap-1">
+                  {emojis.map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => insertEmoji(emoji)}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-700 rounded text-lg"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -228,7 +234,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                   onClick={() => removeFile(index)}
                   className="text-gray-400 hover:text-white"
                 >
-                  ✕
+                  <X className="w-3 h-3" />
                 </button>
               </div>
             ))}
@@ -237,7 +243,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       )}
 
       {/* Input Container */}
-      <div className="bg-gray-800 border border-gray-600 rounded-lg">
+      <div className="bg-black border border-gray-600 rounded-lg">
         {/* Formatting Toolbar */}
         <div className="flex items-center space-x-1 p-2 border-b border-gray-600">
           <Button

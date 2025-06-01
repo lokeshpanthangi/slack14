@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Message, useMessages } from '@/contexts/MessageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import FilePreview from './FilePreview';
 
 interface MessageBubbleProps {
   message: Message;
@@ -29,21 +30,65 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '🎉', '👏'];
 
   const formatMessageContent = (content: string) => {
-    // Simple mention formatting - in a real app, this would be more sophisticated
+    // Check if content contains file attachments
+    const filePattern = /📎 (.+)/g;
+    const files = [];
+    let match;
+    let textContent = content;
+
+    while ((match = filePattern.exec(content)) !== null) {
+      const fileName = match[1];
+      files.push({
+        name: fileName,
+        type: getFileType(fileName),
+        url: createMockFileUrl(fileName),
+        size: Math.floor(Math.random() * 5000000) + 100000 // Mock file size
+      });
+      textContent = textContent.replace(match[0], '').trim();
+    }
+
+    // Format text content
     const mentionRegex = /@(\w+)/g;
     const channelRegex = /#(\w+)/g;
     
-    let formattedContent = content
+    let formattedContent = textContent
       .replace(mentionRegex, '<span class="text-blue-400 hover:underline cursor-pointer">@$1</span>')
       .replace(channelRegex, '<span class="text-blue-400 hover:underline cursor-pointer">#$1</span>');
     
-    // Simple formatting
     formattedContent = formattedContent
       .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
       .replace(/_([^_]+)_/g, '<em>$1</em>')
       .replace(/`([^`]+)`/g, '<code class="bg-gray-700 px-1 rounded text-white">$1</code>');
     
-    return formattedContent;
+    return { formattedContent, files };
+  };
+
+  const getFileType = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) {
+      return 'image/' + (extension === 'jpg' ? 'jpeg' : extension);
+    }
+    if (extension === 'pdf') return 'application/pdf';
+    return 'application/octet-stream';
+  };
+
+  const createMockFileUrl = (fileName: string) => {
+    // In a real app, this would be the actual file URL
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) {
+      return `https://picsum.photos/400/300?random=${Math.random()}`;
+    }
+    return `https://example.com/files/${fileName}`;
+  };
+
+  const handleFileDownload = (file: any) => {
+    // In a real app, this would trigger the actual download
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleReaction = (emoji: string) => {
@@ -79,6 +124,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     return date.toLocaleDateString();
   };
 
+  const { formattedContent, files } = formatMessageContent(message.content);
+
   return (
     <div 
       className={`group flex items-start space-x-3 hover:bg-slack-message-hover px-4 py-1 ${isGrouped ? 'py-0.5' : 'py-2'}`}
@@ -113,10 +160,25 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
         
-        <div 
-          className="text-white"
-          dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
-        />
+        {formattedContent && (
+          <div 
+            className="text-white mb-2"
+            dangerouslySetInnerHTML={{ __html: formattedContent }}
+          />
+        )}
+
+        {/* File Attachments */}
+        {files.length > 0 && (
+          <div className="space-y-2 mb-2">
+            {files.map((file, index) => (
+              <FilePreview
+                key={index}
+                file={file}
+                onDownload={() => handleFileDownload(file)}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Reactions */}
         {message.reactions.length > 0 && (
