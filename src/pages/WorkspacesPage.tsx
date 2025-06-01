@@ -60,7 +60,8 @@ const WorkspacesPage: React.FC = () => {
         id: selectedWorkspace.id,
         name: selectedWorkspace.name,
         url: selectedWorkspace.url,
-        slug: selectedWorkspace.slug
+        slug: selectedWorkspace.slug,
+        isAdmin: selectedWorkspace.isOwner
       });
       // Navigate to dashboard
       navigate('/');
