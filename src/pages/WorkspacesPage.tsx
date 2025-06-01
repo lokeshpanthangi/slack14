@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,7 @@ interface MockWorkspace {
 }
 
 const WorkspacesPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, setWorkspace } = useAuth();
   const navigate = useNavigate();
   const [joinWorkspaceUrl, setJoinWorkspaceUrl] = useState('');
   const [showJoinForm, setShowJoinForm] = useState(false);
@@ -54,8 +53,18 @@ const WorkspacesPage: React.FC = () => {
 
   const handleLaunchWorkspace = (workspaceId: string) => {
     console.log('Launching workspace:', workspaceId);
-    // Navigate to dashboard for this workspace
-    navigate('/');
+    const selectedWorkspace = userWorkspaces.find(ws => ws.id === workspaceId);
+    if (selectedWorkspace) {
+      // Set the workspace in auth context
+      setWorkspace({
+        id: selectedWorkspace.id,
+        name: selectedWorkspace.name,
+        url: selectedWorkspace.url,
+        slug: selectedWorkspace.slug
+      });
+      // Navigate to dashboard
+      navigate('/');
+    }
   };
 
   const handleCreateWorkspace = () => {
@@ -254,7 +263,7 @@ const WorkspacesPage: React.FC = () => {
                   placeholder="Enter workspace URL, code, or invite link"
                   value={joinWorkspaceUrl}
                   onChange={(e) => setJoinWorkspaceUrl(e.target.value)}
-                  className="text-15 border-slack rounded-slack-md"
+                  className="text-15 bg-chat-dark border-gray-400 text-white placeholder:text-gray-400"
                 />
                 <div className="flex space-x-2">
                   <Button
@@ -294,6 +303,7 @@ const WorkspacesPage: React.FC = () => {
                 placeholder="e.g. My Company"
                 value={createWorkspaceData.name}
                 onChange={(e) => setCreateWorkspaceData(prev => ({ ...prev, name: e.target.value }))}
+                className="bg-chat-dark border-gray-400 text-white placeholder:text-gray-400"
               />
             </div>
             <div>
@@ -302,6 +312,7 @@ const WorkspacesPage: React.FC = () => {
                 placeholder="What's this workspace for?"
                 value={createWorkspaceData.description}
                 onChange={(e) => setCreateWorkspaceData(prev => ({ ...prev, description: e.target.value }))}
+                className="bg-chat-dark border-gray-400 text-white placeholder:text-gray-400"
               />
             </div>
             <div>
@@ -311,7 +322,7 @@ const WorkspacesPage: React.FC = () => {
                   placeholder="my-company"
                   value={createWorkspaceData.slug}
                   onChange={(e) => setCreateWorkspaceData(prev => ({ ...prev, slug: e.target.value }))}
-                  className="rounded-r-none"
+                  className="rounded-r-none bg-chat-dark border-gray-400 text-white placeholder:text-gray-400"
                 />
                 <span className="bg-gray-100 border border-l-0 px-3 py-2 text-sm text-gray-600 rounded-r-md">
                   .slack.com
